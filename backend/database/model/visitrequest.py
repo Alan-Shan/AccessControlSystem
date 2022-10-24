@@ -21,5 +21,20 @@ class VisitRequest(db.Model):
 
     approved = db.Column(db.Boolean, nullable=False, default=False)
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'surname': self.surname,
+            'patronymic': self.patronymic,
+            'email': self.email,
+            'phone': self.phone,
+            'image_path': self.image_path,
+            'document_type': self.document_type,
+            'document_number': self.document_number,
+            'purpose': self.purpose,
+            'approved': self.approved
+        }
+
     def __repr__(self):
         return '<User %r>' % self.username

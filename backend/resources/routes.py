@@ -127,13 +127,16 @@ def add_visit_request():
 
     visit_request = VisitRequest()
     # get image from request
-    image = flask.request.files['image']
-    if image.filename:
-        name = str(ImageCounter.query.first().counter)
-        image.save('images/profile_pic' + name + '.jpg')
+    image = flask.request.json.get('base64_image', None)
+    if image:
+        image_from_base64 = base64.b64decode(image)
+        name = str(ImageCounter.query.first().counter) + '.jpg'
         ImageCounter.query.first().counter += 1
         db.session.commit()
-        visit_request.image = name + '.jpg'
+        with open('images/profile_pic/' + name, "wb") as f:
+            f.write(image_from_base64)
+        visit_request.image = name
+        db.session.commit()
 
     visit_request.name = flask.request.json.get('name', None)
     visit_request.surname = flask.request.json.get('surname', None)
@@ -163,7 +166,8 @@ def add_visit_request():
 
     if not re.match(r"[^@]+@[^@]+\.[^@]+", visit_request.email):
         return flask.jsonify({"msg": "Invalid email"}), 400
-    if not re.match(r"^\+?3?8?(0\d{9})$", visit_request.phone):
+    # check if phone number is valid (Russian phone number) (+79999999999) or (89999999999)
+    if not re.match(r"^\+?7?8?\d{10}$", visit_request.phone):
         return flask.jsonify({"msg": "Invalid phone"}), 400
     if len(visit_request.document_number) != 10:
         return flask.jsonify({"msg": "Invalid document number"}), 400
@@ -383,8 +387,15 @@ def get_visit_requests_by_id():
         401:
             description: Login failed
     """
+    if not flask.request.json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
     visit_request_id = flask.request.json.get('visit_request_id', None)
+    if visit_request_id is None:
+        return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
+    if visit_request is None:
+        return flask.jsonify({"msg": "Visit request with this id does not exist"}), 400
     return flask.jsonify(visit_request.serialize()), 200
 
 
@@ -414,11 +425,21 @@ def approve_visit_request():
                 properties:
                     msg:
                         type: string
+        400:
+            description: Bad request (missing parameters) or visit request not found
         401:
             description: Login failed
     """
+    if not flask.request.json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
     visit_request_id = flask.request.json.get('visit_request_id', None)
+    if not visit_request_id:
+        return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
+
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
+    if not visit_request:
+        return flask.jsonify({"msg": "Visit request not found"}), 400
     visit_request.approved = True
     db.session.commit()
     return flask.jsonify({"msg": "Visit request approved"}), 200
@@ -450,14 +471,72 @@ def reject_visit_request():
                 properties:
                     msg:
                         type: string
+        400:
+            description: Bad request (missing parameters) or visit request not found
         401:
             description: Login failed
     """
+    if not flask.request.json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
     visit_request_id = flask.request.json.get('visit_request_id', None)
+
+    if not visit_request_id:
+        return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
+
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
+    if not visit_request:
+        return flask.jsonify({"msg": "Visit request not found"}), 400
     visit_request.approved = False
     db.session.commit()
     return flask.jsonify({"msg": "Visit request rejected"}), 200
+
+
+@jwt_required()
+def delete_visit_request():
+    """
+    Delete visit request
+    Call this route to delete visit request (only for admins)
+    ---
+    security:
+        - bearerAuth: []
+    tags:
+        - visit_request
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    visit_request_id:
+                        type: integer
+    responses:
+        200:
+            description: Visit request deleted
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        400:
+            description: Bad request (missing parameters) or visit request not found
+        401:
+            description: Login failed
+    """
+    if not flask.request.json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
+    visit_request_id = flask.request.json.get('visit_request_id', None)
+    if visit_request_id is None:
+        return flask.jsonify({"msg": "Visit request id is not specified"}), 400
+
+    visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
+    if visit_request is None:
+        return flask.jsonify({"msg": "Visit request not found"}), 400
+
+    db.session.delete(visit_request)
+    db.session.commit()
+    return flask.jsonify({"msg": "Visit request deleted"}), 200
 
 
 @jwt_required()
@@ -742,7 +821,7 @@ def add_admin():
                         type: string
                     password:
                         type: string
-                    role:
+                    admin_type:
                         type: string
     responses:
         200:
@@ -773,10 +852,13 @@ def add_admin():
     admin = Admin()
     admin.username = flask.request.json.get('username', None)
     admin.password = flask.request.json.get('password', None)
+    admin.admin_type = flask.request.json.get('admin_type', None)
     if not admin.username:
         return flask.jsonify({"msg": "Missing username parameter"}), 400
     if not admin.password:
         return flask.jsonify({"msg": "Missing password parameter"}), 400
+    if not admin.admin_type:
+        return flask.jsonify({"msg": "Missing admin_type parameter"}), 400
 
     # check if admin with this username already exists
     if Admin.query.filter_by(username=admin.username).first():
@@ -873,12 +955,19 @@ def get_admin_by_id():
             description: Admin not found
     """
     # check if current user is supper admin
+    if not flask.request.is_json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "supper_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
     admin_id = flask.request.json.get('admin_id', None)
+    if not admin_id:
+        return flask.jsonify({"msg": "Missing admin_id parameter"}), 400
     admin = Admin.query.filter_by(id=admin_id).first()
+    if not admin:
+        return flask.jsonify({"msg": "Admin not found"}), 404
     return flask.jsonify(admin.serialize()), 200
 
 
@@ -996,6 +1085,9 @@ def change_admin_type():
     if not admin_type:
         return flask.jsonify({"msg": "Missing admin_type parameter"}), 400
 
+    if admin_type not in ["admin", "supper_admin"]:
+        return flask.jsonify({"msg": "Admin type must be supper_admin or admin"}), 400
+
     admin = Admin.query.filter_by(id=admin_id).first()
     if not admin:
         return flask.jsonify({"msg": "Admin with this id does not exists"}), 404
@@ -1016,9 +1108,10 @@ def init_routes(app):
     app.add_url_rule('/get_picture_by_patch', 'get_picture_by_patch', get_picture_by_patch, methods=['GET'])
     app.add_url_rule('/get_not_approved_requests', 'get_not_approved_visit_requests', get_not_approved_visit_requests, methods=['GET'])
     app.add_url_rule('/get_approved_requests', 'get_approved_visit_request', get_approved_visit_request, methods=['GET'])
-    app.add_url_rule('/get_request', 'get_visit_requests_by_id', get_visit_requests_by_id, methods=['POST'])
+    app.add_url_rule('/get_request', 'get_visit_requests_by_id', get_visit_requests_by_id, methods=['GET'])
     app.add_url_rule('/approve_request', 'approve_visit_request', approve_visit_request, methods=['POST'])
     app.add_url_rule('/reject_request', 'reject_visit_request', reject_visit_request, methods=['POST'])
+    app.add_url_rule('/delete_request', 'delete_visit_request', delete_visit_request, methods=['POST'])
     app.add_url_rule('/add_admin', 'add_admin', add_admin, methods=['POST'])
     app.add_url_rule('/get_admins', 'get_admins', get_admins, methods=['GET'])
     app.add_url_rule('/get_admin', 'get_admin_by_id', get_admin_by_id, methods=['POST'])

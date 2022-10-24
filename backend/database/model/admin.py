@@ -11,5 +11,12 @@ class Admin(db.Model):
     refresh_token = db.Column(db.String(100), nullable=True, default='')
     access_token = db.Column(db.String(100), nullable=True, default='')
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'admin_type': self.admin_type,
+        }
+
     def __repr__(self):
         return '<User %r>' % self.username
