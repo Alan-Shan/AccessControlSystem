@@ -22,3 +22,10 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### .env structure
+```
+APP_URL=http://localhost:8000
+API_URL=http://localhost:8000/api
+AUTH_URL=http://localhost:8000/oauth/token
+```
