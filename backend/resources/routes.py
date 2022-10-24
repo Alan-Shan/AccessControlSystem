@@ -1,15 +1,14 @@
 import base64
 import os
 from datetime import datetime
-from datetime import timedelta
 from datetime import timezone
 
 
 import flask
-from flask_jwt_extended import create_access_token, verify_jwt_in_request
+from flask_jwt_extended import create_access_token, create_refresh_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from flask_jwt_extended import get_jwt
+from flask_jwt_extended import decode_token
 
 from database.model.token import TokenBlocklist
 from database.model.admin import Admin
@@ -52,16 +51,9 @@ def login():
             description: Bad request (missing parameters)
         401:
             description: Login failed
-        403:
-            description: Already logged in
     """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
-
-    verify_jwt_in_request(optional=True)
-    # if already logged in
-    if get_jwt_identity():
-        return flask.jsonify({"msg": "Already logged in"}), 403
 
     username = flask.request.json.get('username', None)
     password = flask.request.json.get('password', None)
@@ -74,8 +66,24 @@ def login():
     if admin.password != password or admin is None:
         return flask.jsonify({"msg": "Bad username or password"}), 401
 
+    # blocklist all tokens from a user when he logs in
+    tokens = (admin.access_token, admin.refresh_token)
+    for token in tokens:
+        if token is not None and token != '':
+            token = decode_token(token)
+            jti = token['jti']
+            ttype = token['type']
+            now = datetime.now(timezone.utc)
+            db.session.add(TokenBlocklist(jti=jti, type=ttype, created_at=now))
+            db.session.commit()
+
     access_token = create_access_token(identity=username)
-    refresh_token = create_access_token(identity=username)
+    refresh_token = create_refresh_token(identity=username)
+
+    admin.access_token = access_token
+    admin.refresh_token = refresh_token
+    db.session.commit()
+
     return flask.jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
 
@@ -630,8 +638,21 @@ def refresh():
             description: Login failed
     """
     identity = get_jwt_identity()
-    modify_token()
-    access_token = create_access_token(identity=identity, fresh=False)
+
+    admin = Admin.query.filter_by(username=identity).first()
+
+    token = decode_token(admin.access_token, csrf_value=None)
+    jti = token['jti']
+    ttype = token['type']
+    now = datetime.now(timezone.utc)
+    db.session.add(TokenBlocklist(jti=jti, type=ttype, created_at=now))
+    db.session.commit()
+
+    access_token = create_access_token(identity=identity)
+
+    admin.access_token = access_token
+    db.session.commit()
+
     return flask.jsonify(access_token=access_token)
 
 
@@ -661,8 +682,8 @@ def who_iam():
             description: Login failed
     """
     identity = get_jwt_identity()
-    admin = Admin.query.filter_by(id=identity).first()
-    return flask.jsonify(id=admin.id, username=admin.username, role=admin.role), 200
+    admin = Admin.query.filter_by(username=identity).first()
+    return flask.jsonify(id=admin.id, username=admin.username, role=admin.admin_type), 200
 
 
 # logout route
@@ -687,11 +708,18 @@ def modify_token():
         401:
             description: Login failed
     """
-    jti = get_jwt()["jti"]
-    now = datetime.now(timezone.utc)
-    db.session.add(TokenBlocklist(jti=jti, created_at=now))
-    db.session.commit()
-    return flask.jsonify(msg="JWT revoked")
+    identity = get_jwt_identity()
+
+    admin = Admin.query.filter_by(username=identity).first()
+    for token in (admin.access_token, admin.refresh_token):
+        token = decode_token(token, csrf_value=None)
+        jti = token["jti"]
+        ttype = token["type"]
+        now = datetime.now(timezone.utc)
+        db.session.add(TokenBlocklist(jti=jti, type=ttype, created_at=now))
+        db.session.commit()
+
+    return flask.jsonify(msg=f"{ttype.capitalize()} token successfully revoked"), 200
 
 
 @jwt_required()

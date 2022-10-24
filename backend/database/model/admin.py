@@ -8,5 +8,8 @@ class Admin(db.Model):
     password = db.Column(db.String(80), nullable=False)
     admin_type = db.Column(db.String(15), nullable=False, default='admin')
 
+    refresh_token = db.Column(db.String(100), nullable=True, default='')
+    access_token = db.Column(db.String(100), nullable=True, default='')
+
     def __repr__(self):
         return '<User %r>' % self.username
