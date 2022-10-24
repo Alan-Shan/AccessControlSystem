@@ -11,6 +11,8 @@ class VisitRequest(db.Model):
     email = db.Column(db.String(80), nullable=False)
     phone = db.Column(db.String(80), nullable=False)
 
+    image_path = db.Column(db.String(80), nullable=True, default=None)
+
     # document (passport or driver license)
     document_type = db.Column(db.String(20), nullable=False)
     document_number = db.Column(db.String(10), nullable=False)

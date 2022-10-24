@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -13,6 +14,7 @@ from database.model.token import TokenBlocklist
 from database.model.admin import Admin
 from database.db import db
 from database.model.visitrequest import VisitRequest
+from database.model.image_counter import ImageCounter
 
 import re
 
@@ -43,6 +45,15 @@ def add_visit_request():
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
     visit_request = VisitRequest()
+    # get image from request
+    image = flask.request.files['image']
+    if image.filename:
+        name = str(ImageCounter.query.first().counter)
+        image.save('images/profile_pic' + name + '.jpg')
+        ImageCounter.query.first().counter += 1
+        db.session.commit()
+        visit_request.image = name + '.jpg'
+
     visit_request.name = flask.request.json.get('name', None)
     visit_request.surname = flask.request.json.get('surname', None)
     visit_request.patronymic = flask.request.json.get('patronymic', None)
@@ -138,6 +149,67 @@ def reject_visit_request():
     return flask.jsonify({"msg": "Visit request rejected"}), 200
 
 
+@jwt_required()
+def add_picture():
+    if not flask.request.is_json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+    visit_request_id = flask.request.json.get('visit_request_id', None)
+
+    if not visit_request_id:
+        return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
+
+    image = flask.request.files['image']
+
+    if not image.filename:
+        return flask.jsonify({"msg": "Missing image parameter"}), 400
+
+    visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
+    if visit_request is None:
+        return flask.jsonify({"msg": "Visit request not found"}), 404
+
+    if image.filename:
+        name = str(ImageCounter.query.first().counter)
+        image.save('images/profile_pic' + name + '.jpg')
+        ImageCounter.query.first().counter += 1
+        visit_request.image = name + '.jpg'
+        db.session.commit()
+
+    return flask.jsonify({"msg": "Image added"}), 200
+
+
+@jwt_required()
+def get_picture_by_id():
+    if not flask.request.is_json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+    visit_request_id = flask.request.json.get('visit_request_id', None)
+
+    if not visit_request_id:
+        return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
+
+    visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
+    if visit_request is None:
+        return flask.jsonify({"msg": "Visit request not found"}), 404
+
+    if visit_request.image is None:
+        return flask.jsonify({"msg": "Image not found"}), 404
+
+    return flask.send_file('images/profile_pic' + visit_request.image)
+
+
+@jwt_required()
+def get_picture_by_patch():
+    if not flask.request.is_json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+    image_patch = flask.request.json.get('image_patch', None)
+    if not image_patch:
+        return flask.jsonify({"msg": "Missing image_patch parameter"}), 400
+
+    if not os.path.isfile('images/profile_pic' + image_patch):
+        return flask.jsonify({"msg": "Image not found"}), 404
+
+    return flask.send_file('images/profile_pic' + image_patch)
+
+
 @jwt_required(refresh=True)
 def refresh():
     identity = get_jwt_identity()
@@ -146,11 +218,10 @@ def refresh():
     return flask.jsonify(access_token=access_token)
 
 
-# protected route
 @jwt_required()
-def protected():
-    current_user = get_jwt_identity()
-    return flask.jsonify(logged_in_as=current_user), 200
+def who_iam():
+    identity = get_jwt_identity()
+    return flask.jsonify(logged_in_as=identity), 200
 
 
 # logout route
@@ -259,10 +330,13 @@ def change_admin_type():
 def init_routes(app):
     app.add_url_rule('/login', 'login', login, methods=['POST'])
     app.add_url_rule('/refresh', 'refresh', refresh, methods=['POST'])
-    app.add_url_rule('/protected', 'protected', protected, methods=['GET'])
+    app.add_url_rule('/who_iam', 'who_iam', who_iam, methods=['GET'])
     app.add_url_rule('/logout', 'logout', modify_token, methods=['DELETE'])
     app.add_url_rule('/add_request', 'add_visit_request', add_visit_request, methods=['POST'])
     app.add_url_rule('/get_requests', 'get_visit_requests', get_visit_requests, methods=['GET'])
+    app.add_url_rule('/add_picture', 'add_picture', add_picture, methods=['POST'])
+    app.add_url_rule('/get_picture_by_id', 'get_picture_by_id', get_picture_by_id, methods=['GET'])
+    app.add_url_rule('/get_picture_by_patch', 'get_picture_by_patch', get_picture_by_patch, methods=['GET'])
     app.add_url_rule('/get_not_approved_requests', 'get_not_approved_visit_requests', get_not_approved_visit_requests, methods=['GET'])
     app.add_url_rule('/get_approved_requests', 'get_approved_visit_request', get_approved_visit_request, methods=['GET'])
     app.add_url_rule('/get_request', 'get_visit_requests_by_id', get_visit_requests_by_id, methods=['POST'])
@@ -273,4 +347,3 @@ def init_routes(app):
     app.add_url_rule('/get_admin', 'get_admin_by_id', get_admin_by_id, methods=['POST'])
     app.add_url_rule('/delete_admin', 'delete_admin', delete_admin, methods=['POST'])
     app.add_url_rule('/change_admin_type', 'change_admin_type', change_admin_type, methods=['POST'])
-    
