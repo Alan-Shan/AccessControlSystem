@@ -24,6 +24,12 @@ Swagger(app)
 
 # init cors
 CORS(app)
+cors = CORS(app, resource={
+    r"/*": {
+        "origins": "*"
+    }
+})
+
 
 # init db
 @app.before_first_request
