@@ -1,5 +1,7 @@
 import axios from 'axios';
 import store from "@/store";
+import jwt_decode from "jwt-decode";
+import api from "@/services/api";
 
 const AUTH_URL = process.env.VUE_APP_AUTH_URL
 
@@ -11,14 +13,10 @@ const instance = axios.create({
 instance.interceptors.response.use(
     response => response,
     async error => {
-        // dispatch async store action to logout
-        store.dispatch('auth/logout').then(() => {
-            // redirect to login page
-            window.location.href = '/login';
-        });
-        if (error.response.status === 401) {
+        if (error.response && error.response.status === 401) {
             // dispatch logout
-            await store.dispatch('auth/logout');
+            console.debug('401 error on auth interceptor');
+            // await store.dispatch('auth/logout');
         }
     }
 )
@@ -28,30 +26,34 @@ class AuthService {
         return instance.post('/login', {
             username: user.username,
             password: user.password
-        })
-            .then(response => {
-                if (response.data.accessToken) {
-                    localStorage.setItem('user', JSON.stringify({
-                        accessToken: response.data.accessToken,
-                        username: response.data.identity,
-                        role: this.whoami().then(response => {
-                            return response.data.role;
-                        }).catch(error => {
-                            console.log(error);
-                            return null;
-                        })
-                    }));
-                }
-
-                return response.data;
-            });
+        }).then(async response => {
+            if (response.data.access_token) {
+                const newUser = {
+                    accessToken: response.data.access_token,
+                    username: jwt_decode(response.data.access_token).sub,
+                    role: (await api.whoami(response.data.access_token)).data.role
+                };
+                localStorage.setItem('user', JSON.stringify(newUser));
+                // this.$cookies.set('refreshToken', response.data.refreshToken); todo
+                return newUser;
+            }
+            return null;
+        });
     }
 
     logout() {
+        console.debug('invalidating token');
+        const accessToken = store.state.auth.user.accessToken;
+        if (accessToken) {
+            instance.delete('/logout', {
+                headers: {
+                    Authorization: 'Bearer ' + accessToken
+                }
+            }).then(r => {
+                console.debug(r);
+            }) // TODO
+        }
         localStorage.removeItem('user');
-        instance.delete('/logout').then(r => {
-            console.debug(r);
-        }) // TODO
     }
 
     refreshToken() {
@@ -66,10 +68,6 @@ class AuthService {
             }
             return response.data;
         });
-    }
-
-    whoami() {
-        return instance.get('/who_ami');
     }
 }
 

@@ -10,6 +10,11 @@ def init_cfg(app):
     # SQL Alchemy config
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 
+    # CORS config
+    app.config['CORS_HEADERS'] = 'Content-Type'
+    app.config['CORS_RESOURCES'] = {r"/*": {"origins": "*"}}
+    app.config['CORS_SUPPORTS_CREDENTIALS'] = True
+
     # change swagger template
     app.config['SWAGGER'] = {
         'title': 'Access Control System API',
@@ -23,4 +28,3 @@ def init_cfg(app):
             }
         ]
     }
-

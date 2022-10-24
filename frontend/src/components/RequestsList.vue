@@ -8,8 +8,8 @@
             <span class="visually-hidden">Loading...</span>
           </div>
         </div>
-        <div v-if="!loading && !requests.length" class="alert alert-info" role="alert">
-          В данный момент заявки в системе отсутствуют
+        <div v-if="message.text" class="alert" :class="alertClass" role="alert">
+          {{ message.text }}
         </div>
         <table v-if="!loading && requests.length" class="table table-striped">
           <thead>
@@ -40,8 +40,6 @@
             <td>{{ request.document.type }}</td>
             <td>{{ request.document.series }}</td>
             <td>{{ request.document.number }}</td>
-            <td>{{ request.createdAt }}</td>
-            <td>{{ request.updatedAt }}</td>
             <td>{{ request.status }}</td>
             <td>
               <button type="button" class="btn btn-primary" v-on:click="accept(request.id)">Принять</button>
@@ -63,14 +61,38 @@ export default {
   data() {
     return {
       requests: [],
-      loading: true
+      alertClasses: {
+        success: "alert-success",
+        error: "alert-danger",
+        info: "alert-info",
+      },
+      message: {
+        type: "",
+        text: "",
+      },
+      loading: true,
+    }
+  },
+  computed: {
+    alertClass() {
+      return this.alertClasses[this.message.type];
     }
   },
   async mounted() {
     try {
       const response = await api.getRequests();
       this.requests = response.data;
+      if (!this.requests.length) {
+        this.message = {
+          type: "info",
+          text: "В данный момент заявки в системе отсутствуют",
+        };
+      }
     } catch (e) {
+      this.message = {
+        type: "error",
+        text: "Произошла ошибка при загрузке заявок",
+      };
       console.log(e);
     } finally {
       this.loading = false;
@@ -78,9 +100,19 @@ export default {
   },
   methods:
       {
-        async reject() {
+        async reject(id) {
+          try {
+            await api.rejectRequest(id);
+          } catch (e) {
+            console.log(e);
+          }
         },
-        async accept() {
+        async accept(id) {
+          try {
+            await api.approveRequest(id);
+          } catch (e) {
+            console.log(e);
+          }
         },
       }
 }

@@ -24,7 +24,7 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/">
+          <router-link to="/requestsList">
             <span class="nav-link">Заявки </span>
           </router-link>
         </li>

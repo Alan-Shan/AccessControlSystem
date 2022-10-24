@@ -6,11 +6,11 @@
         {{ error }}
       </div>
       <div class="form-floating">
-        <input type="text" class="form-control" v-model="this.p" id="usernameInput" placeholder="user">
+        <input type="text" class="form-control" v-model="this.username" id="usernameInput" placeholder="user">
         <label for="usernameInput">Имя пользователя</label>
       </div>
       <div class="form-floating">
-        <input type="password" class="form-control" id="passwordInput" placeholder="****">
+        <input type="password" required class="form-control" v-model="this.password" id="passwordInput" placeholder="****">
         <label for="passwordInput">Пароль</label>
       </div>
 
@@ -32,14 +32,28 @@ export default {
       username: "",
       password: "",
       error: "",
+      validationFailed: [],
     };
   },
   methods: {
+    validateFields() {
+      this.validationFailed = [];
+      if (!this.username) {
+        this.validationFailed.push("username");
+        return false;
+      }
+      if (!this.password) {
+        this.validationFailed.push("password");
+        return false;
+      }
+      return true;
+    },
     login() {
       this.$store.dispatch("auth/login", {
-        email: this.email,
+        username: this.username,
         password: this.password,
       }).then(() => {
+        console.log("success");
         this.$router.push({ name: "Home" });
       }).catch((error) => {
         // check for null error
