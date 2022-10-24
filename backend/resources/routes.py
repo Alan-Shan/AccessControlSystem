@@ -535,12 +535,11 @@ def get_picture_by_id():
                         type: integer
     responses:
         200:
-            description: Picture
-            schema:
-                type: object
-                properties:
-                    image:
-                        type: string (image path) may be null
+            description: Ok
+            content:
+                image/jpeg:
+                    type: image
+                    format: binary
         400:
             description: Bad request (missing parameters)
         401:
@@ -585,12 +584,11 @@ def get_picture_by_patch():
                         type: string
     responses:
         200:
-            description: Picture
-            schema:
-                type: object
-                properties:
-                    image:
-                        type: string (image path) may be null
+            description: Ok
+            content:
+                image/jpeg:
+                    type: image
+                    format: binary
         400:
             description: Bad request (missing parameters)
         401:
@@ -607,7 +605,7 @@ def get_picture_by_patch():
     if not os.path.isfile('images/profile_pic' + image_patch):
         return flask.jsonify({"msg": "Image not found"}), 404
 
-    return flask.send_file('images/profile_pic' + image_patch)
+    return flask.send_file('images/profile_pic' + image_patch, mimetype='image/jpg', as_attachment=True)
 
 
 @jwt_required(refresh=True)
