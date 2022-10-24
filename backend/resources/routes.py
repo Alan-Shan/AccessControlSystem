@@ -70,7 +70,7 @@ def login():
     tokens = (admin.access_token, admin.refresh_token)
     for token in tokens:
         if token is not None and token != '':
-            token = decode_token(token)
+            token = decode_token(token, csrf_value=None, allow_expired=True)
             jti = token['jti']
             ttype = token['type']
             now = datetime.now(timezone.utc)
@@ -720,7 +720,7 @@ def refresh():
 
     admin = Admin.query.filter_by(username=identity).first()
 
-    token = decode_token(admin.access_token, csrf_value=None)
+    token = decode_token(admin.access_token, csrf_value=None, allow_expired=True)
     jti = token['jti']
     ttype = token['type']
     now = datetime.now(timezone.utc)
@@ -736,7 +736,7 @@ def refresh():
 
 
 @jwt_required()
-def who_iam():
+def who_i_am():
     """
     Who iam
     Call this route to get admin info (only for admins)
@@ -791,7 +791,7 @@ def modify_token():
 
     admin = Admin.query.filter_by(username=identity).first()
     for token in (admin.access_token, admin.refresh_token):
-        token = decode_token(token, csrf_value=None)
+        token = decode_token(token, csrf_value=None, allow_expired=True)
         jti = token["jti"]
         ttype = token["type"]
         now = datetime.now(timezone.utc)
@@ -1099,7 +1099,7 @@ def change_admin_type():
 def init_routes(app):
     app.add_url_rule('/login', 'login', login, methods=['POST'])
     app.add_url_rule('/refresh', 'refresh', refresh, methods=['POST'])
-    app.add_url_rule('/who_iam', 'who_iam', who_iam, methods=['GET'])
+    app.add_url_rule('/who_i_am', 'who_i_am', who_i_am, methods=['GET'])
     app.add_url_rule('/logout', 'logout', modify_token, methods=['DELETE'])
     app.add_url_rule('/add_request', 'add_visit_request', add_visit_request, methods=['POST'])
     app.add_url_rule('/get_requests', 'get_visit_requests', get_visit_requests, methods=['GET'])
