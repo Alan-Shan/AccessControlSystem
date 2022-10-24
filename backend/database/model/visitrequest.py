@@ -11,6 +11,8 @@ class VisitRequest(db.Model):
     email = db.Column(db.String(80), nullable=False)
     phone = db.Column(db.String(80), nullable=False)
 
+    image_path = db.Column(db.String(80), nullable=True, default=None)
+
     # document (passport or driver license)
     document_type = db.Column(db.String(20), nullable=False)
     document_number = db.Column(db.String(10), nullable=False)
@@ -18,6 +20,21 @@ class VisitRequest(db.Model):
     purpose = db.Column(db.String(120), nullable=False)
 
     approved = db.Column(db.Boolean, nullable=False, default=False)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'surname': self.surname,
+            'patronymic': self.patronymic,
+            'email': self.email,
+            'phone': self.phone,
+            'image_path': self.image_path,
+            'document_type': self.document_type,
+            'document_number': self.document_number,
+            'purpose': self.purpose,
+            'approved': self.approved
+        }
 
     def __repr__(self):
         return '<User %r>' % self.username
