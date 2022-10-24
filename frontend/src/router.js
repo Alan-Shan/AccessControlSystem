@@ -30,8 +30,13 @@ const routes = [
     // admin dashboard requests list page
     {
         path: "/requestsList",
-        name: "requestsList",
+        name: "RequestsList",
         component: () => import("./components/RequestsList.vue")
+    },
+    {
+        path: "/singleRequest/:id",
+        name: "SingleRequest",
+        component: () => import("./components/SingleRequest.vue")
     }
 ];
 

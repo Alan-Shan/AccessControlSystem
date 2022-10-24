@@ -54,15 +54,16 @@
 </template>
 <script>
 export default {
-  name: "SingleRequest"
+  name: "SingleRequest",
   data() {
+    console.log(this.$route.params.id);
     return {
       request: {},
       loading: true,
       message: {
         text: "",
         isError: false,
-      },
+      }
     };
   },
   computed: {
@@ -70,7 +71,7 @@ export default {
       return this.message.isError ? "alert-danger" : "alert-success";
     },
   },
-  methods: {
+  methods: {}
 }
 </script>
 
