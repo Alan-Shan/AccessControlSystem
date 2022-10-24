@@ -12,7 +12,7 @@ instance.interceptors.request.use(function (config) {
     console.log('locale')
     // add token to request header
     const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.access_token) {
+    if (user && user.accessToken) {
         config.headers.Authorization = 'Bearer ' + user.accessToken;
     }
     return config;
@@ -40,7 +40,7 @@ class ApiService {
         return instance.post('/add_request', application);
     }
     getRequests() {
-        return instance.get('/get_visit_requests');
+        return instance.get('/get_requests');
     }
     getApprovedRequests() {
         return instance.get( '/get_approved_requests');
@@ -57,8 +57,8 @@ class ApiService {
     rejectRequest(id) {
         return instance.post('/reject_request/' + id);
     }
-    async whoami(access_token) {
-        return await instance.get('/who_iam', {
+    async whoAmI(access_token) {
+        return await instance.get('/who_am_i', {
             headers: {
                 Authorization: 'Bearer ' + access_token
             }

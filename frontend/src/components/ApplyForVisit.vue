@@ -164,10 +164,10 @@ export default {
       return re.test(String(email).toLowerCase());
     },
     sendForm: function (e) {
-      this.sending = true;
       this.errors = {};
       this.message.show = false;
-      if (!this.checkForm(e)) {
+      if (this.checkForm(e)) {
+        this.sending = true;
         api.postApplication(
             {
               "name": this.name,
@@ -175,8 +175,9 @@ export default {
               "patronymic": this.patronymic,
               "email": this.email,
               "phone": this.phone,
-              "visitPurpose": this.visitPurpose,
-              "document": this.document
+              "purpose": this.visitPurpose,
+              "document_type": this.document.type,
+              "document_number": this.document.number,
             }
         ).then(() => {
           this.message.text = "Заявка успешно отправлена";

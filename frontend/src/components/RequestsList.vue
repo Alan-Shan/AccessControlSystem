@@ -11,17 +11,14 @@
         <div v-if="message.text" class="alert" :class="alertClass" role="alert">
           {{ message.text }}
         </div>
-        <table v-if="!loading && requests.length" class="table table-striped">
+        <table v-if="!loading && requests.length" class="table table-responsive table-bordered">
           <thead>
           <tr>
-            <th scope="col">Имя</th>
-            <th scope="col">Фамилия</th>
-            <th scope="col">Отчество</th>
+            <th scope="col">ФИО</th>
             <th scope="col">Email</th>
             <th scope="col">Телефон</th>
             <th scope="col">Цель визита</th>
             <th scope="col">Тип документа</th>
-            <th scope="col">Серия документа</th>
             <th scope="col">Номер документа</th>
             <th scope="col">Дата создания</th>
             <th scope="col">Дата обновления</th>
@@ -31,19 +28,17 @@
           </thead>
           <tbody>
           <tr v-for="request in requests" :key="request.id">
-            <td>{{ request.name }}</td>
-            <td>{{ request.surname }}</td>
-            <td>{{ request.patronymic }}</td>
+            <td>{{ request.name + ' ' + request.surname + ' ' +  request.patronymic }}</td>
+
             <td>{{ request.email }}</td>
             <td>{{ request.phone }}</td>
             <td>{{ request.visitPurpose }}</td>
-            <td>{{ request.document.type }}</td>
-            <td>{{ request.document.series }}</td>
-            <td>{{ request.document.number }}</td>
+            <td>{{ request.document_type }}</td>
+            <td>{{ request.document_number }}</td>
             <td>{{ request.status }}</td>
             <td>
-              <button type="button" class="btn btn-primary" v-on:click="accept(request.id)">Принять</button>
-              <button type="button" class="btn btn-danger" v-on:click="reject(request.id)">Отклонить</button>
+              <button type="button" class="btn btn-primary" v-on:click="accept(request.id)">a</button>
+              <button type="button" class="btn btn-danger" v-on:click="reject(request.id)">D</button>
             </td>
           </tr>
           </tbody>
@@ -95,6 +90,7 @@ export default {
       };
       console.log(e);
     } finally {
+      console.log("finally");
       this.loading = false;
     }
   },

@@ -31,7 +31,7 @@ class AuthService {
                 const newUser = {
                     accessToken: response.data.access_token,
                     username: jwt_decode(response.data.access_token).sub,
-                    role: (await api.whoami(response.data.access_token)).data.role
+                    role: (await api.whoAmI(response.data.access_token)).data.role
                 };
                 localStorage.setItem('user', JSON.stringify(newUser));
                 // this.$cookies.set('refreshToken', response.data.refreshToken); todo
@@ -43,15 +43,17 @@ class AuthService {
 
     logout() {
         console.debug('invalidating token');
-        const accessToken = store.state.auth.user.accessToken;
-        if (accessToken) {
-            instance.delete('/logout', {
-                headers: {
-                    Authorization: 'Bearer ' + accessToken
-                }
-            }).then(r => {
-                console.debug(r);
-            }) // TODO
+        if (store.state.auth.user) {
+            const accessToken = store.state.auth.user.accessToken;
+            if (accessToken) {
+                instance.delete('/logout', {
+                    headers: {
+                        Authorization: 'Bearer ' + accessToken
+                    }
+                }).then(r => {
+                    console.debug(r);
+                }) // TODO
+            }
         }
         localStorage.removeItem('user');
     }
