@@ -1,3 +1,4 @@
+import base64
 import os
 from datetime import datetime
 from datetime import timedelta
@@ -5,7 +6,7 @@ from datetime import timezone
 
 
 import flask
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, verify_jwt_in_request
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import get_jwt
@@ -21,8 +22,46 @@ import re
 
 # Login route
 def login():
+    """
+    Login route
+    Call this route to get a JWT token to be used with the other protected routes
+    ---
+    tags:
+        - auth
+    parameters:
+     - name: body
+       in: body
+       schema:
+                type: object
+                properties:
+                    username:
+                        type: string
+                    password:
+                        type: string
+    responses:
+        200:
+            description: Login successful
+            schema:
+                type: object
+                properties:
+                    access_token:
+                        type: string
+                    refresh_token:
+                        type: string
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        403:
+            description: Already logged in
+    """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
+    verify_jwt_in_request(optional=True)
+    # if already logged in
+    if get_jwt_identity():
+        return flask.jsonify({"msg": "Already logged in"}), 403
 
     username = flask.request.json.get('username', None)
     password = flask.request.json.get('password', None)
@@ -41,6 +80,40 @@ def login():
 
 
 def add_visit_request():
+    """
+    Add visit request
+    Call this route to add a visit request
+---
+    tags:
+        - visit_request
+    parameters:
+     - in: body
+       name: body
+       schema:
+                type: object
+                properties:
+                    name:
+                        type: string
+                    surname:
+                        type: string
+                    phone:
+                        type: string
+                    email:
+                        type: string
+                    date:
+                        type: string
+                    time:
+                        type: string
+                    description:
+                        type: string
+    responses:
+        200:
+            description: Visit request added
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+    """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
@@ -108,24 +181,200 @@ def add_visit_request():
 
 @jwt_required()
 def get_visit_requests():
+    """
+    Get visit requests
+    Call this route to get all visit requests (only for admins)
+    ---
+    security:
+        - bearerAuth: []
+    tags:
+        - visit_request
+    responses:
+        200:
+            description: Visit requests
+            schema:
+                type: object
+                properties:
+                    visit_requests:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                name:
+                                    type: string
+                                surname:
+                                    type: string
+                                patronymic:
+                                    type: string
+                                email:
+                                    type: string
+                                phone:
+                                    type: string
+                                document_type:
+                                    type: string
+                                document_number:
+                                    type: string
+                                purpose:
+                                    type: string
+                                image:
+                                    type: string (image path) may be null
+        401:
+            description: Login failed
+    """
     visit_requests = VisitRequest.query.all()
     return flask.jsonify([visit_request.serialize() for visit_request in visit_requests]), 200
 
 
 @jwt_required()
 def get_not_approved_visit_requests():
+    """
+    Get not approved visit requests
+    Call this route to get all not approved visit requests (only for admins)
+    ---
+    tags:
+        - visit_request
+    security:
+        - bearerAuth: []
+    responses:
+        200:
+            description: Visit requests
+            schema:
+                type: object
+                properties:
+                    visit_requests:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                name:
+                                    type: string
+                                surname:
+                                    type: string
+                                patronymic:
+                                    type: string
+                                email:
+                                    type: string
+                                phone:
+                                    type: string
+                                document_type:
+                                    type: string
+                                document_number:
+                                    type: string
+                                purpose:
+                                    type: string
+                                image:
+                                    type: string (image path) may be null
+        401:
+            description: Login failed
+    """
     visit_requests = VisitRequest.query.filter_by(approved=False).all()
     return flask.jsonify([visit_request.serialize() for visit_request in visit_requests]), 200
 
 
 @jwt_required()
 def get_approved_visit_request():
+    """
+    Get approved visit requests
+    Call this route to get all approved visit requests (only for admins)
+    ---
+    security:
+        - bearerAuth: []
+    tags:
+        - visit_request
+    responses:
+        200:
+            description: Visit requests
+            schema:
+                type: object
+                properties:
+                    visit_requests:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                name:
+                                    type: string
+                                surname:
+                                    type: string
+                                patronymic:
+                                    type: string
+                                email:
+                                    type: string
+                                phone:
+                                    type: string
+                                document_type:
+                                    type: string
+                                document_number:
+                                    type: string
+                                purpose:
+                                    type: string
+                                image:
+                                    type: string (image path) may be null
+        401:
+            description: Login failed
+    """
     visit_requests = VisitRequest.query.filter_by(approved=True).all()
     return flask.jsonify([visit_request.serialize() for visit_request in visit_requests]), 200
 
 
 @jwt_required()
 def get_visit_requests_by_id():
+    """
+    Get visit requests by id
+    Call this route to get visit requests by id (only for admins)
+    ---
+    security:
+        - bearerAuth: []
+    tags:
+        - visit_request
+    parameters:
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+                visit_request_id:
+                    type: integer
+    responses:
+        200:
+            description: Visit requests
+            schema:
+                type: object
+                properties:
+                    visit_requests:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                name:
+                                    type: string
+                                surname:
+                                    type: string
+                                patronymic:
+                                    type: string
+                                email:
+                                    type: string
+                                phone:
+                                    type: string
+                                document_type:
+                                    type: string
+                                document_number:
+                                    type: string
+                                purpose:
+                                    type: string
+                                image:
+                                    type: string (image path) may be null
+        401:
+            description: Login failed
+    """
     visit_request_id = flask.request.json.get('visit_request_id', None)
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
     return flask.jsonify(visit_request.serialize()), 200
@@ -133,6 +382,33 @@ def get_visit_requests_by_id():
 
 @jwt_required()
 def approve_visit_request():
+    """
+    Approve visit request
+    Call this route to approve visit request (only for admins)
+    ---
+    security:
+        - bearerAuth: []
+    tags:
+        - visit_request
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    visit_request_id:
+                        type: integer
+    responses:
+        200:
+            description: Visit request approved
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        401:
+            description: Login failed
+    """
     visit_request_id = flask.request.json.get('visit_request_id', None)
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
     visit_request.approved = True
@@ -142,6 +418,33 @@ def approve_visit_request():
 
 @jwt_required()
 def reject_visit_request():
+    """
+    Reject visit request
+    Call this route to reject visit request (only for admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - visit_request
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    visit_request_id:
+                        type: integer
+    responses:
+        200:
+            description: Visit request rejected
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        401:
+            description: Login failed
+    """
     visit_request_id = flask.request.json.get('visit_request_id', None)
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
     visit_request.approved = False
@@ -151,6 +454,40 @@ def reject_visit_request():
 
 @jwt_required()
 def add_picture():
+    """
+    Add picture
+    Call this route to add picture (only for admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - picture
+    parameters:
+        - name: body
+          in : body
+          schema:
+                type: object
+                properties:
+                    base64_image:
+                        type: string
+                        description: base64 encoded image
+                    visit_request_id:
+                        type: integer
+    responses:
+        200:
+            description: Picture added
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        404:
+            description: Visit request not found
+    """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
     visit_request_id = flask.request.json.get('visit_request_id', None)
@@ -158,27 +495,59 @@ def add_picture():
     if not visit_request_id:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
 
-    image = flask.request.files['image']
-
-    if not image.filename:
-        return flask.jsonify({"msg": "Missing image parameter"}), 400
+    image = flask.request.json.get('base64_image', None)
+    if not image:
+        return flask.jsonify({"msg": "Missing base64_image parameter"}), 400
 
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
     if visit_request is None:
         return flask.jsonify({"msg": "Visit request not found"}), 404
 
-    if image.filename:
-        name = str(ImageCounter.query.first().counter)
-        image.save('images/profile_pic' + name + '.jpg')
-        ImageCounter.query.first().counter += 1
-        visit_request.image = name + '.jpg'
-        db.session.commit()
+    image_from_base64 = base64.b64decode(image)
+    name = str(ImageCounter.query.first().counter) + '.jpg'
+    ImageCounter.query.first().counter += 1
+    db.session.commit()
+    with open('images/profile_pic/' + name, "wb") as f:
+        f.write(image_from_base64)
+    visit_request.image = name
+    db.session.commit()
 
     return flask.jsonify({"msg": "Image added"}), 200
 
 
 @jwt_required()
 def get_picture_by_id():
+    """
+    Get picture by id
+    Call this route to get picture by id (only for admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - picture
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    visit_request_id:
+                        type: integer
+    responses:
+        200:
+            description: Picture
+            schema:
+                type: object
+                properties:
+                    image:
+                        type: string (image path) may be null
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        404:
+            description: Visit request not found or picture not found
+    """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
     visit_request_id = flask.request.json.get('visit_request_id', None)
@@ -193,11 +562,42 @@ def get_picture_by_id():
     if visit_request.image is None:
         return flask.jsonify({"msg": "Image not found"}), 404
 
-    return flask.send_file('images/profile_pic' + visit_request.image)
+    return flask.send_file('images/profile_pic' + visit_request.image, mimetype='image/jpg', as_attachment=True)
 
 
 @jwt_required()
 def get_picture_by_patch():
+    """
+    Get picture by patch
+    Call this route to get picture by patch (only for admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - picture
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    patch:
+                        type: string
+    responses:
+        200:
+            description: Picture
+            schema:
+                type: object
+                properties:
+                    image:
+                        type: string (image path) may be null
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        404:
+            description: Picture not found
+    """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
     image_patch = flask.request.json.get('image_patch', None)
@@ -212,6 +612,25 @@ def get_picture_by_patch():
 
 @jwt_required(refresh=True)
 def refresh():
+    """
+    Refresh token
+    Call this route to refresh token (only for admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - auth
+    responses:
+        200:
+            description: Token refreshed
+            schema:
+                type: object
+                properties:
+                    access_token:
+                        type: string
+        401:
+            description: Login failed
+    """
     identity = get_jwt_identity()
     modify_token()
     access_token = create_access_token(identity=identity, fresh=False)
@@ -220,13 +639,56 @@ def refresh():
 
 @jwt_required()
 def who_iam():
+    """
+    Who iam
+    Call this route to get admin info (only for admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - auth
+    responses:
+        200:
+            description: Admin info
+            schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                    username:
+                        type: string
+                    role:
+                        type: string
+        401:
+            description: Login failed
+    """
     identity = get_jwt_identity()
-    return flask.jsonify(logged_in_as=identity), 200
+    admin = Admin.query.filter_by(id=identity).first()
+    return flask.jsonify(id=admin.id, username=admin.username, role=admin.role), 200
 
 
 # logout route
 @jwt_required()
 def modify_token():
+    """
+    logout
+    Call this route to Log out (only for admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - auth
+    responses:
+        200:
+            description: Token modified *logout*
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        401:
+            description: Login failed
+    """
     jti = get_jwt()["jti"]
     now = datetime.now(timezone.utc)
     db.session.add(TokenBlocklist(jti=jti, created_at=now))
@@ -236,6 +698,43 @@ def modify_token():
 
 @jwt_required()
 def add_admin():
+    """
+    Add admin
+    Call this route to add admin (only for super admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - admin_management
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    username:
+                        type: string
+                    password:
+                        type: string
+                    role:
+                        type: string
+    responses:
+        200:
+            description: Admin added
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        403:
+            description: Permission denied
+        409:
+            description: Admin already exists
+    """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
@@ -243,7 +742,7 @@ def add_admin():
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "supper_admin":
-        return flask.jsonify({"msg": "You are not supper admin("}), 400
+        return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     admin = Admin()
     admin.username = flask.request.json.get('username', None)
@@ -255,7 +754,7 @@ def add_admin():
 
     # check if admin with this username already exists
     if Admin.query.filter_by(username=admin.username).first():
-        return flask.jsonify({"msg": "Admin with this username already exists"}), 400
+        return flask.jsonify({"msg": "Admin with this username already exists"}), 409
 
     db.session.add(admin)
     db.session.commit()
@@ -265,12 +764,93 @@ def add_admin():
 
 @jwt_required()
 def get_admins():
+    """
+    Get admins
+    Call this route to get all admins (only for super admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - admin_management
+    responses:
+        200:
+            description: Admins
+            schema:
+                type: object
+                properties:
+                    admins:
+                        type: array
+                        items:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                username:
+                                    type: string
+                                role:
+                                    type: string
+        400:
+            description:
+        401:
+            description: Login failed
+        403:
+            description: Permission denied
+        404:
+            description: Admin not found
+    """
+    # check if current user is supper admin
+    current_user = get_jwt_identity()
+    admin = Admin.query.filter_by(username=current_user).first()
+    if admin.admin_type != "supper_admin":
+        return flask.jsonify({"msg": "You are not supper admin("}), 404
     admins = Admin.query.all()
     return flask.jsonify([admin.serialize() for admin in admins]), 200
 
 
 @jwt_required()
 def get_admin_by_id():
+    """
+    Get admin by id
+    Call this route to get admin by id (only for super admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - admin_management
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+    responses:
+        200:
+            description: Admin
+            schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                    username:
+                        type: string
+                    role:
+                        type: string
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        403:
+            description: Permission denied
+        404:
+            description: Admin not found
+    """
+    # check if current user is supper admin
+    current_user = get_jwt_identity()
+    admin = Admin.query.filter_by(username=current_user).first()
+    if admin.admin_type != "supper_admin":
+        return flask.jsonify({"msg": "You are not supper admin("}), 403
     admin_id = flask.request.json.get('admin_id', None)
     admin = Admin.query.filter_by(id=admin_id).first()
     return flask.jsonify(admin.serialize()), 200
@@ -278,14 +858,47 @@ def get_admin_by_id():
 
 @jwt_required()
 def delete_admin():
+    """
+    Delete admin
+    Call this route to delete admin (only for super admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - admin_management
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+    responses:
+        200:
+            description: Admin deleted
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        403:
+            description: Permission denied
+        404:
+            description: Admin not found
+    """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
-    # check if current user is admin
+    # check if current user is supper admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "supper_admin":
-        return flask.jsonify({"msg": "You are not supper admin("}), 400
+        return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     admin_id = flask.request.json.get('admin_id', None)
 
@@ -296,7 +909,7 @@ def delete_admin():
 
     # check if admin with this id exists
     if not admin:
-        return flask.jsonify({"msg": "Admin with this id does not exists"}), 400
+        return flask.jsonify({"msg": "Admin with this id does not exists"}), 404
 
     db.session.delete(admin)
     db.session.commit()
@@ -305,6 +918,42 @@ def delete_admin():
 
 @jwt_required()
 def change_admin_type():
+    """
+    Change admin type
+    Call this route to change admin type (only for super admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - admin_management
+    parameters:
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                    role:
+                        type: string
+    responses:
+        200:
+            description: Admin type changed
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        403:
+            description: Permission denied
+        404:
+            description: Admin not found
+    """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
@@ -312,7 +961,7 @@ def change_admin_type():
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "supper_admin":
-        return flask.jsonify({"msg": "You are not supper admin("}), 400
+        return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     admin_id = flask.request.json.get('admin_id', None)
     admin_type = flask.request.json.get('admin_type', None)
@@ -322,6 +971,8 @@ def change_admin_type():
         return flask.jsonify({"msg": "Missing admin_type parameter"}), 400
 
     admin = Admin.query.filter_by(id=admin_id).first()
+    if not admin:
+        return flask.jsonify({"msg": "Admin with this id does not exists"}), 404
     admin.admin_type = admin_type
     db.session.commit()
     return flask.jsonify({"msg": "Admin type changed"}), 200

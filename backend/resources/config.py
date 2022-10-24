@@ -9,3 +9,18 @@ def init_cfg(app):
 
     # SQL Alchemy config
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+
+    # change swagger template
+    app.config['SWAGGER'] = {
+        'title': 'Access Control System API',
+        'version': '1.0.0',
+        'uiversion': 3,
+        'specs_route': '/api/docs/',
+        'specs': [
+            {
+                'endpoint': 'apispec',
+                'route': '/api/docs/apispec.json',
+            }
+        ]
+    }
+

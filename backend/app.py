@@ -1,5 +1,6 @@
 import flask
 from flask_jwt_extended import JWTManager
+from flasgger import Swagger
 
 from resources import config
 from resources.routes import init_routes
@@ -16,6 +17,9 @@ init_routes(app)
 
 # init jwt
 jwt = JWTManager(app)
+
+# init swagger
+Swagger(app)
 
 
 # init db
