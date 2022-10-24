@@ -2,7 +2,7 @@
 <ul><li>[x] Какой-то back</li></ul>
 <ul><li>[x] Какой-то front</li></ul>
 <ul><li>[ ] Связать back и front</li></ul>
-<ul><li>[ ] Комиты везде</li></ul>
+<ul><li>[x] Комиты везде</li></ul>
 <ul><li>[ ] Unit тесты</li></ul>
 <ul><li>[ ] Обернуть всё в докер</li></ul>
 <ul><li>[ ] Больше анимок в вебе</li></ul>
