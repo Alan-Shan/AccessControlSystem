@@ -1,6 +1,7 @@
 import flask
 from flask_jwt_extended import JWTManager
 from flasgger import Swagger
+from flask_cors import CORS
 
 from resources import config
 from resources.routes import init_routes
@@ -21,6 +22,8 @@ jwt = JWTManager(app)
 # init swagger
 Swagger(app)
 
+# init cors
+CORS(app)
 
 # init db
 @app.before_first_request
