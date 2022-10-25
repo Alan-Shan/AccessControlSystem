@@ -19,7 +19,7 @@ class VisitRequest(db.Model):
 
     purpose = db.Column(db.String(120), nullable=False)
 
-    approved = db.Column(db.Boolean, nullable=False, default=False)
+    status = db.Column(db.String(20), nullable=False, default="pending")
 
     creation_time = db.Column(db.DateTime, nullable=False, default=db.func.now())
     update_time = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
@@ -36,7 +36,7 @@ class VisitRequest(db.Model):
             'document_type': self.document_type,
             'document_number': self.document_number,
             'purpose': self.purpose,
-            'approved': self.approved,
+            'status': self.status,
             "creation_time": self.creation_time,
             "update_time": self.update_time
         }

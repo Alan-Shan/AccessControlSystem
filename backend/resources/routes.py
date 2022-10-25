@@ -283,7 +283,7 @@ def get_not_approved_visit_requests():
         401:
             description: Login failed
     """
-    visit_requests = VisitRequest.query.filter_by(approved=False).all()
+    visit_requests = VisitRequest.query.filter_by(status="rejected").all()
     return flask.jsonify([visit_request.serialize() for visit_request in visit_requests]), 200
 
 
@@ -331,7 +331,7 @@ def get_approved_visit_request():
         401:
             description: Login failed
     """
-    visit_requests = VisitRequest.query.filter_by(approved=True).all()
+    visit_requests = VisitRequest.query.filter_by(status="approved").all()
     return flask.jsonify([visit_request.serialize() for visit_request in visit_requests]), 200
 
 
@@ -440,7 +440,7 @@ def approve_visit_request():
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
     if not visit_request:
         return flask.jsonify({"msg": "Visit request not found"}), 400
-    visit_request.approved = True
+    visit_request.status = 'approved'
     db.session.commit()
     return flask.jsonify({"msg": "Visit request approved"}), 200
 
@@ -487,7 +487,7 @@ def reject_visit_request():
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
     if not visit_request:
         return flask.jsonify({"msg": "Visit request not found"}), 400
-    visit_request.approved = False
+    visit_request.status = "rejected"
     db.session.commit()
     return flask.jsonify({"msg": "Visit request rejected"}), 200
 
