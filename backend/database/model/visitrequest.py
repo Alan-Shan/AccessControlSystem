@@ -27,7 +27,7 @@ class VisitRequest(db.Model):
     update_time = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
 
     def serialize(self):
-        with open(self.image_path, 'rb') as f:
+        with open("images/profile_pic/" + self.image_path, 'rb') as f:
             image = f.read()
             image = base64.b64encode(image)
         return {
