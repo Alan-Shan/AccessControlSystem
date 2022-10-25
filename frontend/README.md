@@ -25,7 +25,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ### .env structure
 ```
-APP_URL=http://localhost:8000
-API_URL=http://localhost:8000/api
-AUTH_URL=http://localhost:8000/oauth/token
+VUE_APP_APP_URL=http://localhost:8000
+VUE_APP_API_URL=http://localhost:8000/api
+VUE_APP_AUTH_URL=http://localhost:8000/oauth/token
 ```

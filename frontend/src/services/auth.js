@@ -23,11 +23,12 @@ instance.interceptors.response.use(
 
 class AuthService {
     login(user) {
-        return instance.post('/login', {
+        return axios.post(instance.getUri() + '/login', {
             username: user.username,
             password: user.password
         }).then(async response => {
-            if (response.data.access_token) {
+            console.debug(response);
+            if (response && response.data.access_token) {
                 const newUser = {
                     accessToken: response.data.access_token,
                     username: jwt_decode(response.data.access_token).sub,
@@ -35,10 +36,13 @@ class AuthService {
                 };
                 localStorage.setItem('user', JSON.stringify(newUser));
                 // this.$cookies.set('refreshToken', response.data.refreshToken); todo
-                return newUser;
+                return Promise.resolve(newUser);
             }
-            return null;
-        });
+            return Promise.reject(response)
+        }).catch(async error => {
+            return Promise.reject(error.response);
+            }
+        );
     }
 
     logout() {
@@ -60,7 +64,7 @@ class AuthService {
 
     refreshToken() {
         return instance.post('/refresh').then(response => {
-            if (response.data.accessToken) {
+            if (response.status === 200 && response.data.accessToken) {
                 localStorage.setItem('user', JSON.stringify({
                     accessToken: response.data.accessToken,
                     username: response.data.identity,

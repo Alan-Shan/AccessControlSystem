@@ -33,30 +33,68 @@ instance.interceptors.response.use(
                 });
             });
         }
+        return Promise.reject(error);
     });
 
 class ApiService {
     postApplication(application) {
         return instance.post('/add_request', application);
     }
+
     getRequests() {
         return instance.get('/get_requests');
     }
+
     getApprovedRequests() {
-        return instance.get( '/get_approved_requests');
+        return instance.get('/get_approved_requests');
     }
+
     getDeniedRequests() {
-        return instance.get( '/get_not_approved_requests');
+        return instance.get('/get_not_approved_requests');
     }
+
     getRequest(id) {
         return instance.get('/get_request/' + id);
     }
+
     approveRequest(id) {
-        return instance.post('/approve_request/' + id);
+        return instance.post('/approve_request', {
+            'visit_request_id': id
+        });
     }
+
     rejectRequest(id) {
-        return instance.post('/reject_request/' + id);
+        return instance.post('/reject_request',
+            {
+                'visit_request_id': id
+            });
     }
+    modifyRequest(application) {
+        return instance.post('/modify_request', application);
+    }
+
+    deleteRequest(id) {
+        return instance.delete('/delete_request/' + id);
+    }
+    addAdmin(admin) {
+        return instance.post('/add_admin', admin);
+    }
+    getAdmins() {
+        return instance.get('/get_admins');
+    }
+    getAdmin(id) {
+        return instance.get('/get_admin/' + id);
+    }
+
+    modifyAdmin(admin) {
+        return instance.post('/modify_admin/', admin);
+    }
+
+    deleteAdmin(id) {
+        return instance.delete('/delete_admin/' + id);
+    }
+
+
     async whoAmI(access_token) {
         return await instance.get('/who_am_i', {
             headers: {

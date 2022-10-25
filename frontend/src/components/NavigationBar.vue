@@ -19,7 +19,7 @@
       </ul>
       <ul class="navbar-nav me-auto" id="privileged_block" v-if="hasPrivilegedAccess">
         <li class="nav-item">
-          <router-link to="/">
+          <router-link to="/home">
             <span class="nav-link">Админ-панель</span>
           </router-link>
         </li>
@@ -29,7 +29,7 @@
           </router-link>
         </li>
         <li v-if="isSuperAdmin" class="nav-item">
-          <router-link to="/">
+          <router-link to="/usersList">
             <span class="nav-link">Пользователи</span>
           </router-link>
         </li>
@@ -65,7 +65,7 @@ export default {
     user() {
       return {
         identity: this.$store.getters["auth/getCurrentUsername"],
-        role: this.$store.getters['auth/getCurrentRole'],
+        role: this.$store.getters['auth/getUserFriendlyRoleName'],
       };
     },
     hasPrivilegedAccess() {

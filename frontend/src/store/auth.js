@@ -20,7 +20,8 @@ function validateInitialState() {
         const currentTime = Date.now() / 1000;
         if (decoded.exp < currentTime) {
             // check for refresh token with vue-cookies
-            const refreshToken = this.$cookies.get('refreshToken');
+            // const refreshToken = this.$cookies.get('refreshToken');
+            const refreshToken = false;
             if (refreshToken) {
                 this.$store.dispatch('auth/refreshToken');
             }
@@ -95,12 +96,17 @@ export const auth = {
         getCurrentRole: state => {
             return state.status.role ? state.status.role : '';
         },
+        getUserFriendlyRoleName : state => {
+            return state.status.role ?
+                (state.status.role === 'admin' ? 'Администратор' :
+                'Господь Бог') : '';
+        },
         hasPrivilegedAccess: state => {
             return state.status.role ?
-                (state.status.role === 'admin' || state.status.role === 'superadmin') : false;
+                (state.status.role === 'admin' || state.status.role === 'super_admin') : false;
         },
         isSuperAdmin: state => {
-            return state.status.role ? state.status.role === 'superadmin' : false;
+            return state.status.role ? state.status.role === 'super_admin' : false;
         }
     }
 };
