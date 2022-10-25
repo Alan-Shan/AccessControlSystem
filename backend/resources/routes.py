@@ -1230,9 +1230,11 @@ def modify_visit_request():
 
     image = flask.request.json.get('base64_image', None)
     if image:
+        extension = image.split(';')[0].split('/')[1]
+        image = image.split(',')[1]
         image_from_base64 = base64.b64decode(image)
         counter = ImageCounter.query.first()
-        name = str(counter.counter) + '.jpg'
+        name = str(counter.counter) + "." + extension
         counter.counter += 1
         db.session.commit()
         # create folder if not exists
@@ -1242,7 +1244,6 @@ def modify_visit_request():
             f.write(image_from_base64)
         visit_request.image_path = name
         db.session.commit()
-
 
     db.session.commit()
     return flask.jsonify({"msg": "Visit request modified"}), 200
