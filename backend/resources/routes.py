@@ -1168,6 +1168,8 @@ def modify_visit_request():
                         type: string
                     visit_status:
                         type: string
+                    base64_image:
+                        type: string
     responses:
         200:
             description: Visit request modified
@@ -1187,6 +1189,7 @@ def modify_visit_request():
     """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
 
     visit_request_id = flask.request.json.get('id', None)
     name = flask.request.json.get('name', None)
@@ -1224,6 +1227,19 @@ def modify_visit_request():
         visit_request.visit_reason = visit_reason
     if visit_status:
         visit_request.visit_status = visit_status
+
+    image = flask.request.json.get('base64_image', None)
+    if image:
+        image_from_base64 = base64.b64decode(image)
+        name = str(ImageCounter.query.first().counter) + '.jpg'
+        ImageCounter.query.first().counter += 1
+        db.session.commit()
+        with open('images/profile_pic/' + name, "wb") as f:
+            f.write(image_from_base64)
+        visit_request.image = name
+        db.session.commit()
+
+
     db.session.commit()
     return flask.jsonify({"msg": "Visit request modified"}), 200
 
