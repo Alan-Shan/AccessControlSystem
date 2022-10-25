@@ -27,11 +27,14 @@ class VisitRequest(db.Model):
     update_time = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
 
     def serialize(self):
-        with open("images/profile_pic/" + self.image_path, 'rb') as f:
-            image = f.read()
-            image = base64.b64encode(image)
-            image = image.decode('utf-8')
-        image = f"data:image/{self.image_path.split('.')[1]};base64," + image
+        if self.image_path:
+            with open("images/profile_pic/" + self.image_path, 'rb') as f:
+                image = f.read()
+                image = base64.b64encode(image)
+                image = image.decode('utf-8')
+            image = f"data:image/{self.image_path.split('.')[1]};base64," + image
+        else:
+            image = ""
         return {
             'id': self.id,
             'name': self.name,
