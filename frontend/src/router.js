@@ -33,11 +33,25 @@ const routes = [
         name: "RequestsList",
         component: () => import("./components/RequestsList.vue")
     },
+    // admin dashboard single request list page
     {
-        path: "/singleRequest/:id",
+        path: "/singleRequest/:id?",
         name: "SingleRequest",
         component: () => import("./components/SingleRequest.vue")
+    },
+    //admin dasboard user list page
+    {
+        path: "/usersList",
+        name: "UsersList",
+        component: () => import("./components/UsersList.vue")
+    },
+    // admin dashboard single user page
+    {
+        path: "/singleUser/:id?",
+        name: "SingleUser",
+        component: () => import("./components/SingleUser.vue")
     }
+
 ];
 
 const router = createRouter({

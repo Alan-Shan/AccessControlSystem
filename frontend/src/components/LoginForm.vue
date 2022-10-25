@@ -57,8 +57,8 @@ export default {
         this.$router.push({ name: "Home" });
       }).catch((error) => {
         // check for null error
-        if (error.response) {
-          this.error = error.response.data.message;
+        if (error.status === 401) {
+          this.error = "Неверное имя пользователя или пароль";
         } else {
           this.error = "Неизвестная ошибка";
         }

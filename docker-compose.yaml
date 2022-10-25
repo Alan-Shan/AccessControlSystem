@@ -2,22 +2,16 @@ version: "3"
 
 services:
   backend:
-    build:
-      backend
+    build: backend
 
   frontend:
     build:
       context: frontend
       dockerfile: Dockerfile
       args:
-        - VUE_APP_URL=http://localhost:5000
-        - VUE_API_URL=http://localhost:5000/api
-        - VUE_AUTH_URL=http://localhost:5000/oauth/token
-
-    # environment:
-      # - VUE_APP_URL=http://localhost:5000
-      # - VUE_API_URL=http://localhost:5000/api
-      # - VUE_AUTH_URL=http://localhost:5000/oauth/token
+        - VUE_APP_APP_URL=http://localhost:5000
+        - VUE_APP_API_URL=http://localhost:5000/api
+        - VUE_APP_AUTH_URL=http://localhost:5000/oauth/token
   
     ports:
       - 80:8080
