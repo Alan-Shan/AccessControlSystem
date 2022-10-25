@@ -129,13 +129,19 @@ def add_visit_request():
     # get image from request
     image = flask.request.json.get('base64_image', None)
     if image:
+        extension = image.split(';')[0].split('/')[1]
+        image = image.split(',')[1]
         image_from_base64 = base64.b64decode(image)
-        name = str(ImageCounter.query.first().counter) + '.jpg'
-        ImageCounter.query.first().counter += 1
+        counter = ImageCounter.query.first()
+        name = str(counter.counter) + "." + extension
+        counter.counter += 1
         db.session.commit()
+        # create folder if not exists
+        if not os.path.exists('images/profile_pic'):
+            os.makedirs('images/profile_pic')
         with open('images/profile_pic/' + name, "wb") as f:
             f.write(image_from_base64)
-        visit_request.image = name
+        visit_request.image_path = name
         db.session.commit()
 
     visit_request.name = flask.request.json.get('name', None)
@@ -585,13 +591,19 @@ def add_picture():
     if visit_request is None:
         return flask.jsonify({"msg": "Visit request not found"}), 404
 
+    extension = image.split(';')[0].split('/')[1]
+    image = image.split(',')[1]
     image_from_base64 = base64.b64decode(image)
-    name = str(ImageCounter.query.first().counter) + '.jpg'
-    ImageCounter.query.first().counter += 1
+    counter = ImageCounter.query.first()
+    name = str(counter.counter) + "." + extension
+    counter.counter += 1
     db.session.commit()
+    # create folder if not exists
+    if not os.path.exists('images/profile_pic'):
+        os.makedirs('images/profile_pic')
     with open('images/profile_pic/' + name, "wb") as f:
         f.write(image_from_base64)
-    visit_request.image = name
+    visit_request.image_path = name
     db.session.commit()
 
     return flask.jsonify({"msg": "Image added"}), 200
