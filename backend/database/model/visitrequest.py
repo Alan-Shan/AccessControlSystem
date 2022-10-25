@@ -31,6 +31,7 @@ class VisitRequest(db.Model):
             image = f.read()
             image = base64.b64encode(image)
             image = image.decode('utf-8')
+        image = f"data:image/{self.image_path.split('.')[1]};base64," + image
         return {
             'id': self.id,
             'name': self.name,
