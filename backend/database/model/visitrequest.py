@@ -30,6 +30,7 @@ class VisitRequest(db.Model):
         with open("images/profile_pic/" + self.image_path, 'rb') as f:
             image = f.read()
             image = base64.b64encode(image)
+            image = image.decode('utf-8')
         return {
             'id': self.id,
             'name': self.name,
