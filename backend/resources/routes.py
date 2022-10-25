@@ -891,7 +891,7 @@ def get_admins():
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "super_admin":
-        return flask.jsonify({"msg": "You are not supper admin("}), 404
+        return flask.jsonify({"msg": "You are not supper admin("}), 403
     admins = Admin.query.all()
     return flask.jsonify([admin.serialize() for admin in admins]), 200
 
