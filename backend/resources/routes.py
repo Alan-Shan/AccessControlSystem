@@ -336,7 +336,7 @@ def get_approved_visit_request():
 
 
 @jwt_required()
-def get_visit_requests_by_id():
+def get_visit_requests_by_id(id):
     """
     Get visit requests by id
     Call this route to get visit requests by id (only for admins)
@@ -385,7 +385,7 @@ def get_visit_requests_by_id():
         401:
             description: Login failed
     """
-    visit_request_id = flask.request.args.get("visit_request_id")
+    visit_request_id = id
     if visit_request_id is None:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
@@ -598,7 +598,7 @@ def add_picture():
 
 
 @jwt_required()
-def get_picture_by_id():
+def get_picture_by_id(id):
     """
     Get picture by id
     Call this route to get picture by id (only for admins)
@@ -626,11 +626,7 @@ def get_picture_by_id():
         404:
             description: Visit request not found or picture not found
     """
-    visit_request_id = flask.request.args.get('visit_request_id', None)
-
-    if not visit_request_id:
-        return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
-
+    visit_request_id = id
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
     if visit_request is None:
         return flask.jsonify({"msg": "Visit request not found"}), 404
@@ -642,7 +638,7 @@ def get_picture_by_id():
 
 
 @jwt_required()
-def get_picture_by_patch():
+def get_picture_by_patch(patch):
     """
     Get picture by patch
     Call this route to get picture by patch (only for admins)
@@ -670,7 +666,7 @@ def get_picture_by_patch():
         404:
             description: Picture not found
     """
-    image_patch = flask.request.args.get('patch', None)
+    image_patch = patch
     if not image_patch:
         return flask.jsonify({"msg": "Missing image_patch parameter"}), 400
 
@@ -901,7 +897,7 @@ def get_admins():
 
 
 @jwt_required()
-def get_admin_by_id():
+def get_admin_by_id(id):
     """
     Get admin by id
     Call this route to get admin by id (only for super admins)
@@ -941,7 +937,7 @@ def get_admin_by_id():
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
-    admin_id = flask.request.args.get('id', None)
+    admin_id = id
     if not admin_id:
         return flask.jsonify({"msg": "Missing admin_id parameter"}), 400
     admin = Admin.query.filter_by(id=admin_id).first()
@@ -951,7 +947,7 @@ def get_admin_by_id():
 
 
 @jwt_required()
-def delete_admin():
+def delete_admin(id):
     """
     Delete admin
     Call this route to delete admin (only for super admins)
@@ -988,7 +984,7 @@ def delete_admin():
     if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
 
-    admin_id = flask.request.args.get('id', None)
+    admin_id = id
 
     if not admin_id:
         return flask.jsonify({"msg": "Missing admin_id parameter"}), 400
@@ -1124,16 +1120,14 @@ def modify_admin():
 
     if not admin_id:
         return flask.jsonify({"msg": "Missing admin_id parameter"}), 400
-    if not username:
-        return flask.jsonify({"msg": "Missing username parameter"}), 400
-    if not password:
-        return flask.jsonify({"msg": "Missing password parameter"}), 400
 
     admin = Admin.query.filter_by(id=admin_id).first()
     if not admin:
         return flask.jsonify({"msg": "Admin with this id does not exists"}), 404
-    admin.username = username
-    admin.password = password
+    if username:
+        admin.username = username
+    if password:
+        admin.password = password
     db.session.commit()
     return flask.jsonify({"msg": "Admin modified"}), 200
 
@@ -1149,7 +1143,6 @@ def modify_visit_request():
     tags:
         - visit_request
     parameters:
-    parameters:
         - name: body
           in: body
           schema:
@@ -1157,7 +1150,23 @@ def modify_visit_request():
                 properties:
                     id:
                         type: integer
-                    status:
+                    name:
+                        type: string
+                    surname:
+                        type: string
+                    phone:
+                        type: string
+                    email:
+                        type: string
+                    visit_date:
+                        type: string
+                    visit_time:
+                        type: string
+                    visit_type:
+                        type: string
+                    visit_reason:
+                        type: string
+                    visit_status:
                         type: string
     responses:
         200:
@@ -1186,17 +1195,41 @@ def modify_visit_request():
         return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     visit_request_id = flask.request.json.get('visit_request_id', None)
-    status = flask.request.json.get('status', None)
+    name = flask.request.json.get('name', None)
+    surname = flask.request.json.get('surname', None)
+    phone = flask.request.json.get('phone', None)
+    email = flask.request.json.get('email', None)
+    visit_date = flask.request.json.get('visit_date', None)
+    visit_time = flask.request.json.get('visit_time', None)
+    visit_type = flask.request.json.get('visit_type', None)
+    visit_reason = flask.request.json.get('visit_reason', None)
+    visit_status = flask.request.json.get('visit_status', None)
 
     if not visit_request_id:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
-    if not status:
-        return flask.jsonify({"msg": "Missing status parameter"}), 400
 
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
     if not visit_request:
         return flask.jsonify({"msg": "Visit request with this id does not exists"}), 404
-    visit_request.status = status
+
+    if name:
+        visit_request.name = name
+    if surname:
+        visit_request.surname = surname
+    if phone:
+        visit_request.phone = phone
+    if email:
+        visit_request.email = email
+    if visit_date:
+        visit_request.visit_date = visit_date
+    if visit_time:
+        visit_request.visit_time = visit_time
+    if visit_type:
+        visit_request.visit_type = visit_type
+    if visit_reason:
+        visit_request.visit_reason = visit_reason
+    if visit_status:
+        visit_request.visit_status = visit_status
     db.session.commit()
     return flask.jsonify({"msg": "Visit request modified"}), 200
 
@@ -1209,16 +1242,18 @@ def init_routes(app):
     app.add_url_rule('/add_request', 'add_visit_request', add_visit_request, methods=['POST'])
     app.add_url_rule('/get_requests', 'get_visit_requests', get_visit_requests, methods=['GET'])
     app.add_url_rule('/add_picture', 'add_picture', add_picture, methods=['POST'])
-    app.add_url_rule('/get_picture_by_id', 'get_picture_by_id', get_picture_by_id, methods=['GET'])
-    app.add_url_rule('/get_picture_by_path', 'get_picture_by_patch', get_picture_by_patch, methods=['GET'])
+    app.add_url_rule('/get_picture_by_id/<id>', 'get_picture_by_id', get_picture_by_id, methods=['GET'])
+    app.add_url_rule('/get_picture_by_path/<path>', 'get_picture_by_patch', get_picture_by_patch, methods=['GET'])
     app.add_url_rule('/get_not_approved_requests', 'get_not_approved_visit_requests', get_not_approved_visit_requests, methods=['GET'])
     app.add_url_rule('/get_approved_requests', 'get_approved_visit_request', get_approved_visit_request, methods=['GET'])
-    app.add_url_rule('/get_request', 'get_visit_requests_by_id', get_visit_requests_by_id, methods=['GET'])
+    app.add_url_rule('/get_request/<id>', 'get_visit_requests_by_id', get_visit_requests_by_id, methods=['GET'])
     app.add_url_rule('/approve_request', 'approve_visit_request', approve_visit_request, methods=['POST'])
     app.add_url_rule('/reject_request', 'reject_visit_request', reject_visit_request, methods=['POST'])
     app.add_url_rule('/delete_request', 'delete_visit_request', delete_visit_request, methods=['POST'])
     app.add_url_rule('/add_admin', 'add_admin', add_admin, methods=['POST'])
     app.add_url_rule('/get_admins', 'get_admins', get_admins, methods=['GET'])
-    app.add_url_rule('/get_admin', 'get_admin_by_id', get_admin_by_id, methods=['GET'])
-    app.add_url_rule('/delete_admin', 'delete_admin', delete_admin, methods=['DELETE'])
+    app.add_url_rule('/get_admin/<id>', 'get_admin_by_id', get_admin_by_id, methods=['GET'])
+    app.add_url_rule('/delete_admin/<id>', 'delete_admin', delete_admin, methods=['DELETE'])
     app.add_url_rule('/change_admin_type', 'change_admin_type', change_admin_type, methods=['POST'])
+    app.add_url_rule('/modify_admin', 'modify_admin', modify_admin, methods=['POST'])
+    app.add_url_rule('/modify_request', 'modify_visit_request', modify_visit_request, methods=['POST'])
