@@ -21,6 +21,9 @@ def create_db(app, jwt):
         from database.model.admin import Admin
         db.create_all()
         db.session.add(Admin(username='admin', password='admin'))
+        db.session.add(Admin(username='user', password='user', admin_type="super_admin"))
+
+
         db.session.commit()
         print('Database created!')
     else:
