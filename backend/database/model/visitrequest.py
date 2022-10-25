@@ -1,3 +1,5 @@
+import base64
+
 from database.db import db
 
 
@@ -25,6 +27,9 @@ class VisitRequest(db.Model):
     update_time = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
 
     def serialize(self):
+        with open(self.image_path, 'rb') as f:
+            image = f.read()
+            image = base64.b64encode(image)
         return {
             'id': self.id,
             'name': self.name,
@@ -33,6 +38,7 @@ class VisitRequest(db.Model):
             'email': self.email,
             'phone': self.phone,
             'image_path': self.image_path,
+            'base64_image': image,
             'document_type': self.document_type,
             'document_number': self.document_number,
             'purpose': self.purpose,
