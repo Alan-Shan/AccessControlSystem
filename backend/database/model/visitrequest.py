@@ -21,6 +21,9 @@ class VisitRequest(db.Model):
 
     approved = db.Column(db.Boolean, nullable=False, default=False)
 
+    creation_time = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    update_time = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
+
     def serialize(self):
         return {
             'id': self.id,
@@ -33,7 +36,9 @@ class VisitRequest(db.Model):
             'document_type': self.document_type,
             'document_number': self.document_number,
             'purpose': self.purpose,
-            'approved': self.approved
+            'approved': self.approved,
+            "creation_time": self.creation_time,
+            "update_time": self.update_time
         }
 
     def __repr__(self):

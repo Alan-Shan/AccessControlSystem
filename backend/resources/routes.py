@@ -63,7 +63,7 @@ def login():
         return flask.jsonify({"msg": "Missing password parameter"}), 400
 
     admin = Admin.query.filter_by(username=username).first()
-    if admin.password != password or admin is None:
+    if admin is None or admin.password != password:
         return flask.jsonify({"msg": "Bad username or password"}), 401
 
     # blocklist all tokens from a user when he logs in
