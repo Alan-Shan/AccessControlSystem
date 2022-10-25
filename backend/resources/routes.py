@@ -891,7 +891,7 @@ def get_admins():
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "super_admin":
-        return flask.jsonify({"msg": "You are not supper admin("}), 404
+        return flask.jsonify({"msg": "You are not supper admin("}), 403
     admins = Admin.query.all()
     return flask.jsonify([admin.serialize() for admin in admins]), 200
 
@@ -1231,12 +1231,16 @@ def modify_visit_request():
     image = flask.request.json.get('base64_image', None)
     if image:
         image_from_base64 = base64.b64decode(image)
-        name = str(ImageCounter.query.first().counter) + '.jpg'
-        ImageCounter.query.first().counter += 1
+        counter = ImageCounter.query.first()
+        name = str(counter.counter) + '.jpg'
+        counter.counter += 1
         db.session.commit()
+        # create folder if not exists
+        if not os.path.exists('images/profile_pic'):
+            os.makedirs('images/profile_pic')
         with open('images/profile_pic/' + name, "wb") as f:
             f.write(image_from_base64)
-        visit_request.image = name
+        visit_request.image_path = name
         db.session.commit()
 
 

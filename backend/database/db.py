@@ -19,11 +19,11 @@ def create_db(app, jwt):
 
     if not os.path.exists('instance/db.sqlite'):
         from database.model.admin import Admin
+        from database.model.image_counter import ImageCounter
         db.create_all()
         db.session.add(Admin(username='admin', password='admin'))
         db.session.add(Admin(username='user', password='user', admin_type="super_admin"))
-
-
+        db.session.add(ImageCounter())
         db.session.commit()
         print('Database created!')
     else:
