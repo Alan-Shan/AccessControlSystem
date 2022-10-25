@@ -346,13 +346,11 @@ def get_visit_requests_by_id():
     tags:
         - visit_request
     parameters:
-        - name: body
-          in: body
-          schema:
-            type: object
-            properties:
-                visit_request_id:
-                    type: integer
+        - name: visit_request_id
+          in: path
+          type: integer
+          required: true
+          description: Visit request id
     responses:
         200:
             description: Visit requests
@@ -387,10 +385,7 @@ def get_visit_requests_by_id():
         401:
             description: Login failed
     """
-    if not flask.request.json:
-        return flask.jsonify({"msg": "Missing JSON in request"}), 400
-
-    visit_request_id = flask.request.json.get('visit_request_id', None)
+    visit_request_id = flask.request.args.get("visit_request_id")
     if visit_request_id is None:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
     visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
@@ -613,13 +608,10 @@ def get_picture_by_id():
     tags:
         - picture
     parameters:
-        - name: body
-          in: body
-          schema:
-                type: object
-                properties:
-                    visit_request_id:
-                        type: integer
+        - name: visit_request_id
+          in: path
+          type: integer
+          required: true
     responses:
         200:
             description: Ok
@@ -634,9 +626,7 @@ def get_picture_by_id():
         404:
             description: Visit request not found or picture not found
     """
-    if not flask.request.is_json:
-        return flask.jsonify({"msg": "Missing JSON in request"}), 400
-    visit_request_id = flask.request.json.get('visit_request_id', None)
+    visit_request_id = flask.request.args.get('visit_request_id', None)
 
     if not visit_request_id:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
@@ -662,13 +652,10 @@ def get_picture_by_patch():
     tags:
         - picture
     parameters:
-        - name: body
-          in: body
-          schema:
-                type: object
-                properties:
-                    patch:
-                        type: string
+        - name: patch
+          in: path
+          type: string
+          required: true
     responses:
         200:
             description: Ok
@@ -683,9 +670,7 @@ def get_picture_by_patch():
         404:
             description: Picture not found
     """
-    if not flask.request.is_json:
-        return flask.jsonify({"msg": "Missing JSON in request"}), 400
-    image_patch = flask.request.json.get('image_patch', None)
+    image_patch = flask.request.args.get('patch', None)
     if not image_patch:
         return flask.jsonify({"msg": "Missing image_patch parameter"}), 400
 
@@ -926,13 +911,10 @@ def get_admin_by_id():
     tags:
         - admin_management
     parameters:
-        - name: body
-          in: body
-          schema:
-                type: object
-                properties:
-                    id:
-                        type: integer
+        - name: id
+          in: path
+          type: integer
+          required: true
     responses:
         200:
             description: Admin
@@ -955,14 +937,11 @@ def get_admin_by_id():
             description: Admin not found
     """
     # check if current user is supper admin
-    if not flask.request.is_json:
-        return flask.jsonify({"msg": "Missing JSON in request"}), 400
-
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "supper_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
-    admin_id = flask.request.json.get('admin_id', None)
+    admin_id = flask.request.args.get('id', None)
     if not admin_id:
         return flask.jsonify({"msg": "Missing admin_id parameter"}), 400
     admin = Admin.query.filter_by(id=admin_id).first()
@@ -982,13 +961,10 @@ def delete_admin():
     tags:
         - admin_management
     parameters:
-        - name: body
-          in: body
-          schema:
-                type: object
-                properties:
-                    id:
-                        type: integer
+        - name: id
+          in: path
+          type: integer
+          required: true
     responses:
         200:
             description: Admin deleted
@@ -1006,16 +982,13 @@ def delete_admin():
         404:
             description: Admin not found
     """
-    if not flask.request.is_json:
-        return flask.jsonify({"msg": "Missing JSON in request"}), 400
-
     # check if current user is supper admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
     if admin.admin_type != "supper_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
 
-    admin_id = flask.request.json.get('admin_id', None)
+    admin_id = flask.request.args.get('id', None)
 
     if not admin_id:
         return flask.jsonify({"msg": "Missing admin_id parameter"}), 400
@@ -1096,6 +1069,138 @@ def change_admin_type():
     return flask.jsonify({"msg": "Admin type changed"}), 200
 
 
+@jwt_required()
+def modify_admin():
+    """
+    Modify admin
+    Call this route to modify admin (only for super admins)
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - admin_management
+    parameters:
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                    username:
+                        type: string
+                    password:
+                        type: string
+    responses:
+        200:
+            description: Admin modified
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        403:
+            description: Permission denied
+        404:
+            description: Admin not found
+    """
+    if not flask.request.is_json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
+    # check if current user is admin
+    current_user = get_jwt_identity()
+    admin = Admin.query.filter_by(username=current_user).first()
+    if admin.admin_type != "supper_admin":
+        return flask.jsonify({"msg": "You are not supper admin("}), 403
+
+    admin_id = flask.request.json.get('admin_id', None)
+    username = flask.request.json.get('username', None)
+    password = flask.request.json.get('password', None)
+
+    if not admin_id:
+        return flask.jsonify({"msg": "Missing admin_id parameter"}), 400
+    if not username:
+        return flask.jsonify({"msg": "Missing username parameter"}), 400
+    if not password:
+        return flask.jsonify({"msg": "Missing password parameter"}), 400
+
+    admin = Admin.query.filter_by(id=admin_id).first()
+    if not admin:
+        return flask.jsonify({"msg": "Admin with this id does not exists"}), 404
+    admin.username = username
+    admin.password = password
+    db.session.commit()
+    return flask.jsonify({"msg": "Admin modified"}), 200
+
+
+@jwt_required()
+def modify_visit_request():
+    """
+    Modify visit request
+    Call this route to modify visit request
+    ---
+    security:
+    - bearerAuth: []
+    tags:
+        - visit_request
+    parameters:
+    parameters:
+        - name: body
+          in: body
+          schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                    status:
+                        type: string
+    responses:
+        200:
+            description: Visit request modified
+            schema:
+                type: object
+                properties:
+                    msg:
+                        type: string
+        400:
+            description: Bad request (missing parameters)
+        401:
+            description: Login failed
+        403:
+            description: Permission denied
+        404:
+            description: Visit request not found
+    """
+    if not flask.request.is_json:
+        return flask.jsonify({"msg": "Missing JSON in request"}), 400
+
+    # check if current user is admin
+    current_user = get_jwt_identity()
+    admin = Admin.query.filter_by(username=current_user).first()
+    if admin.admin_type != "supper_admin":
+        return flask.jsonify({"msg": "You are not supper admin("}), 403
+
+    visit_request_id = flask.request.json.get('visit_request_id', None)
+    status = flask.request.json.get('status', None)
+
+    if not visit_request_id:
+        return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
+    if not status:
+        return flask.jsonify({"msg": "Missing status parameter"}), 400
+
+    visit_request = VisitRequest.query.filter_by(id=visit_request_id).first()
+    if not visit_request:
+        return flask.jsonify({"msg": "Visit request with this id does not exists"}), 404
+    visit_request.status = status
+    db.session.commit()
+    return flask.jsonify({"msg": "Visit request modified"}), 200
+
+
 def init_routes(app):
     app.add_url_rule('/login', 'login', login, methods=['POST'])
     app.add_url_rule('/refresh', 'refresh', refresh, methods=['POST'])
@@ -1114,6 +1219,6 @@ def init_routes(app):
     app.add_url_rule('/delete_request', 'delete_visit_request', delete_visit_request, methods=['POST'])
     app.add_url_rule('/add_admin', 'add_admin', add_admin, methods=['POST'])
     app.add_url_rule('/get_admins', 'get_admins', get_admins, methods=['GET'])
-    app.add_url_rule('/get_admin', 'get_admin_by_id', get_admin_by_id, methods=['POST'])
-    app.add_url_rule('/delete_admin', 'delete_admin', delete_admin, methods=['POST'])
+    app.add_url_rule('/get_admin', 'get_admin_by_id', get_admin_by_id, methods=['GET'])
+    app.add_url_rule('/delete_admin', 'delete_admin', delete_admin, methods=['DELETE'])
     app.add_url_rule('/change_admin_type', 'change_admin_type', change_admin_type, methods=['POST'])
