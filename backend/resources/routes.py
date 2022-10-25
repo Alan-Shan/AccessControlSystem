@@ -831,7 +831,7 @@ def add_admin():
     # check if current user is admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
-    if admin.admin_type != "supper_admin":
+    if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     admin = Admin()
@@ -894,7 +894,7 @@ def get_admins():
     # check if current user is supper admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
-    if admin.admin_type != "supper_admin":
+    if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 404
     admins = Admin.query.all()
     return flask.jsonify([admin.serialize() for admin in admins]), 200
@@ -939,7 +939,7 @@ def get_admin_by_id():
     # check if current user is supper admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
-    if admin.admin_type != "supper_admin":
+    if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
     admin_id = flask.request.args.get('id', None)
     if not admin_id:
@@ -985,7 +985,7 @@ def delete_admin():
     # check if current user is supper admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
-    if admin.admin_type != "supper_admin":
+    if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     admin_id = flask.request.args.get('id', None)
@@ -1048,7 +1048,7 @@ def change_admin_type():
     # check if current user is admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
-    if admin.admin_type != "supper_admin":
+    if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     admin_id = flask.request.json.get('admin_id', None)
@@ -1058,8 +1058,8 @@ def change_admin_type():
     if not admin_type:
         return flask.jsonify({"msg": "Missing admin_type parameter"}), 400
 
-    if admin_type not in ["admin", "supper_admin"]:
-        return flask.jsonify({"msg": "Admin type must be supper_admin or admin"}), 400
+    if admin_type not in ["admin", "super_admin"]:
+        return flask.jsonify({"msg": "Admin type must be super_admin or admin"}), 400
 
     admin = Admin.query.filter_by(id=admin_id).first()
     if not admin:
@@ -1115,7 +1115,7 @@ def modify_admin():
     # check if current user is admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
-    if admin.admin_type != "supper_admin":
+    if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     admin_id = flask.request.json.get('admin_id', None)
@@ -1182,7 +1182,7 @@ def modify_visit_request():
     # check if current user is admin
     current_user = get_jwt_identity()
     admin = Admin.query.filter_by(username=current_user).first()
-    if admin.admin_type != "supper_admin":
+    if admin.admin_type != "super_admin":
         return flask.jsonify({"msg": "You are not supper admin("}), 403
 
     visit_request_id = flask.request.json.get('visit_request_id', None)
