@@ -1188,12 +1188,6 @@ def modify_visit_request():
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
-    # check if current user is admin
-    current_user = get_jwt_identity()
-    admin = Admin.query.filter_by(username=current_user).first()
-    if admin.admin_type != "super_admin":
-        return flask.jsonify({"msg": "You are not supper admin("}), 403
-
     visit_request_id = flask.request.json.get('visit_request_id', None)
     name = flask.request.json.get('name', None)
     surname = flask.request.json.get('surname', None)
