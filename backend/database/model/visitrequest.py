@@ -37,8 +37,8 @@ class VisitRequest(db.Model):
             'document_number': self.document_number,
             'purpose': self.purpose,
             'status': self.status,
-            "creation_time": self.creation_time,
-            "update_time": self.update_time
+            "creation_time": self.creation_time.strftime("%d.%m.%Y %H:%M:%S"),
+            "update_time": self.update_time.strftime("%d.%m.%Y %H:%M:%S")
         }
 
     def __repr__(self):
