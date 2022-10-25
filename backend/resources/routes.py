@@ -178,15 +178,15 @@ def add_visit_request():
     if len(visit_request.document_number) != 10:
         return flask.jsonify({"msg": "Invalid document number"}), 400
 
-    # check if visit request with this email already exists
-    if VisitRequest.query.filter_by(email=visit_request.email).first() is not None:
-        return flask.jsonify({"msg": "Visit request with this email already exists"}), 400
-    # check if visit request with this phone already exists
-    if VisitRequest.query.filter_by(phone=visit_request.phone).first() is not None:
-        return flask.jsonify({"msg": "Visit request with this phone already exists"}), 400
-    # check if visit request with this document number already exists
-    if VisitRequest.query.filter_by(document_number=visit_request.document_number).first() is not None:
-        return flask.jsonify({"msg": "Visit request with this document number already exists"}), 400
+    # # check if visit request with this email already exists
+    # if VisitRequest.query.filter_by(email=visit_request.email).first() is not None:
+    #     return flask.jsonify({"msg": "Visit request with this email already exists"}), 400
+    # # check if visit request with this phone already exists
+    # if VisitRequest.query.filter_by(phone=visit_request.phone).first() is not None:
+    #     return flask.jsonify({"msg": "Visit request with this phone already exists"}), 400
+    # # check if visit request with this document number already exists
+    # if VisitRequest.query.filter_by(document_number=visit_request.document_number).first() is not None:
+    #     return flask.jsonify({"msg": "Visit request with this document number already exists"}), 400
 
     db.session.add(visit_request)
     db.session.commit()
@@ -401,7 +401,7 @@ def get_visit_requests_by_id(id):
 
 
 @jwt_required()
-def approve_visit_request():
+def approve_visit_request(id):
     """
     Approve visit request
     Call this route to approve visit request (only for admins)
@@ -411,13 +411,11 @@ def approve_visit_request():
     tags:
         - visit_request
     parameters:
-        - name: body
-          in: body
-          schema:
-                type: object
-                properties:
-                    id:
-                        type: integer
+        - name: id
+          in: path
+          type: integer
+          required: true
+          description: Visit request id
     responses:
         200:
             description: Visit request approved
@@ -431,10 +429,8 @@ def approve_visit_request():
         401:
             description: Login failed
     """
-    if not flask.request.json:
-        return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
-    visit_request_id = flask.request.json.get('id', None)
+    visit_request_id = id
     if not visit_request_id:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
 
@@ -447,7 +443,7 @@ def approve_visit_request():
 
 
 @jwt_required()
-def reject_visit_request():
+def reject_visit_request(id):
     """
     Reject visit request
     Call this route to reject visit request (only for admins)
@@ -457,13 +453,11 @@ def reject_visit_request():
     tags:
         - visit_request
     parameters:
-        - name: body
-          in: body
-          schema:
-                type: object
-                properties:
-                    id:
-                        type: integer
+        - name: id
+          in: path
+          type: integer
+          required: true
+          description: Visit request id
     responses:
         200:
             description: Visit request rejected
@@ -477,10 +471,7 @@ def reject_visit_request():
         401:
             description: Login failed
     """
-    if not flask.request.json:
-        return flask.jsonify({"msg": "Missing JSON in request"}), 400
-
-    visit_request_id = flask.request.json.get('id', None)
+    visit_request_id = id
 
     if not visit_request_id:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
@@ -494,7 +485,7 @@ def reject_visit_request():
 
 
 @jwt_required()
-def delete_visit_request():
+def delete_visit_request(id):
     """
     Delete visit request
     Call this route to delete visit request (only for admins)
@@ -504,13 +495,11 @@ def delete_visit_request():
     tags:
         - visit_request
     parameters:
-        - name: body
-          in: body
-          schema:
-                type: object
-                properties:
-                    id:
-                        type: integer
+        - name: id
+          in: path
+          type: integer
+          required: true
+          description: Visit request id
     responses:
         200:
             description: Visit request deleted
@@ -524,10 +513,7 @@ def delete_visit_request():
         401:
             description: Login failed
     """
-    if not flask.request.json:
-        return flask.jsonify({"msg": "Missing JSON in request"}), 400
-
-    visit_request_id = flask.request.json.get('id', None)
+    visit_request_id = id
     if visit_request_id is None:
         return flask.jsonify({"msg": "Visit request id is not specified"}), 400
 
@@ -1274,9 +1260,9 @@ def init_routes(app):
     app.add_url_rule('/get_not_approved_requests', 'get_not_approved_visit_requests', get_not_approved_visit_requests, methods=['GET'])
     app.add_url_rule('/get_approved_requests', 'get_approved_visit_request', get_approved_visit_request, methods=['GET'])
     app.add_url_rule('/get_request/<id>', 'get_visit_requests_by_id', get_visit_requests_by_id, methods=['GET'])
-    app.add_url_rule('/approve_request', 'approve_visit_request', approve_visit_request, methods=['POST'])
-    app.add_url_rule('/reject_request', 'reject_visit_request', reject_visit_request, methods=['POST'])
-    app.add_url_rule('/delete_request', 'delete_visit_request', delete_visit_request, methods=['POST'])
+    app.add_url_rule('/approve_request/<id>', 'approve_visit_request', approve_visit_request, methods=['POST'])
+    app.add_url_rule('/reject_request/<id>', 'reject_visit_request', reject_visit_request, methods=['POST'])
+    app.add_url_rule('/delete_request/<id>', 'delete_visit_request', delete_visit_request, methods=['POST'])
     app.add_url_rule('/add_admin', 'add_admin', add_admin, methods=['POST'])
     app.add_url_rule('/get_admins', 'get_admins', get_admins, methods=['GET'])
     app.add_url_rule('/get_admin/<id>', 'get_admin_by_id', get_admin_by_id, methods=['GET'])
