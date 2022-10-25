@@ -346,7 +346,7 @@ def get_visit_requests_by_id(id):
     tags:
         - visit_request
     parameters:
-        - name: visit_request_id
+        - name: id
           in: path
           type: integer
           required: true
@@ -410,7 +410,7 @@ def approve_visit_request():
           schema:
                 type: object
                 properties:
-                    visit_request_id:
+                    id:
                         type: integer
     responses:
         200:
@@ -428,7 +428,7 @@ def approve_visit_request():
     if not flask.request.json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
-    visit_request_id = flask.request.json.get('visit_request_id', None)
+    visit_request_id = flask.request.json.get('id', None)
     if not visit_request_id:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
 
@@ -456,7 +456,7 @@ def reject_visit_request():
           schema:
                 type: object
                 properties:
-                    visit_request_id:
+                    id:
                         type: integer
     responses:
         200:
@@ -474,7 +474,7 @@ def reject_visit_request():
     if not flask.request.json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
-    visit_request_id = flask.request.json.get('visit_request_id', None)
+    visit_request_id = flask.request.json.get('id', None)
 
     if not visit_request_id:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
@@ -503,7 +503,7 @@ def delete_visit_request():
           schema:
                 type: object
                 properties:
-                    visit_request_id:
+                    id:
                         type: integer
     responses:
         200:
@@ -521,7 +521,7 @@ def delete_visit_request():
     if not flask.request.json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
-    visit_request_id = flask.request.json.get('visit_request_id', None)
+    visit_request_id = flask.request.json.get('id', None)
     if visit_request_id is None:
         return flask.jsonify({"msg": "Visit request id is not specified"}), 400
 
@@ -553,7 +553,7 @@ def add_picture():
                     base64_image:
                         type: string
                         description: base64 encoded image
-                    visit_request_id:
+                    id:
                         type: integer
     responses:
         200:
@@ -572,7 +572,7 @@ def add_picture():
     """
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
-    visit_request_id = flask.request.json.get('visit_request_id', None)
+    visit_request_id = flask.request.json.get('id', None)
 
     if not visit_request_id:
         return flask.jsonify({"msg": "Missing visit_request_id parameter"}), 400
@@ -608,7 +608,7 @@ def get_picture_by_id(id):
     tags:
         - picture
     parameters:
-        - name: visit_request_id
+        - name: id
           in: path
           type: integer
           required: true
@@ -1188,7 +1188,7 @@ def modify_visit_request():
     if not flask.request.is_json:
         return flask.jsonify({"msg": "Missing JSON in request"}), 400
 
-    visit_request_id = flask.request.json.get('visit_request_id', None)
+    visit_request_id = flask.request.json.get('id', None)
     name = flask.request.json.get('name', None)
     surname = flask.request.json.get('surname', None)
     phone = flask.request.json.get('phone', None)
