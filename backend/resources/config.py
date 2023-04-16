@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 
@@ -8,7 +9,8 @@ def init_cfg(app):
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 
     # SQL Alchemy config
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///' + os.path.join(basedir, '../instance/db.sqlite')
 
     # CORS config
     app.config['CORS_HEADERS'] = 'Content-Type'

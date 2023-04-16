@@ -4,7 +4,7 @@ from flasgger import Swagger
 from flask_cors import CORS
 
 from resources import config
-from resources.routes import init_routes
+from resources import init_routes
 from database.db import create_db
 
 # create flask app
@@ -14,7 +14,7 @@ app = flask.Flask(__name__)
 config.init_cfg(app)
 
 # init routes
-init_routes(app)
+init_routes.init(app)
 
 # init jwt
 jwt = JWTManager(app)
