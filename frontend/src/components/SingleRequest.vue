@@ -65,7 +65,7 @@
               <small class="form-text text-danger" v-if="'image' in errors">{{ errors.image }}</small>
             </div>
             <button type="button" class="btn btn-primary" @click="saveRequest">
-              <font-awesome-icon icon="save"/>
+                <font-awesome-icon icon="save"/>
               Сохранить
             </button>
           </form>

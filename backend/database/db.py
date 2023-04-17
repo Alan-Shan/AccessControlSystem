@@ -17,7 +17,8 @@ def create_db(app, jwt):
 
         return token is not None
 
-    if not os.path.exists('instance/db.sqlite'):
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    if not os.path.exists(basedir + '/../instance/db.sqlite'):
         from database.model.admin import Admin
         from database.model.image_counter import ImageCounter
         db.create_all()
