@@ -1,5 +1,5 @@
 # base image
-FROM node:12.2.0-alpine as build-stage
+FROM node:13.12.0-alpine as build-stage
 
 # set working directory
 WORKDIR /app
@@ -17,19 +17,21 @@ ENV REACT_APP_AUTH_URL=$REACT_APP_AUTH_URL
 
 COPY package.json /app/package.json
 COPY . .
-RUN npm install
+RUN npm install --silent
 
 RUN REACT_APP_URL=${REACT_APP_URL}
 RUN REACT_APP_API_URL=${REACT_APP_API_URL}
 RUN REACT_APP_AUTH_URL=${REACT_APP_AUTH_URL}
 
-RUN npm install -g create-react-app
+RUN npm install react-scripts@3.4.1 -g --silent
 
 RUN npm run build
 
+#CMD ["npm", "start"]
+
 FROM nginx:1.19.1-alpine as production-stage
 
-COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY --from=build-stage /app/build /usr/share/nginx/html
 
 RUN rm /etc/nginx/conf.d/default.conf
 
