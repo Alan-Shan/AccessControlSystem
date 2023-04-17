@@ -3,17 +3,19 @@ version: "3"
 services:
   backend:
     build: backend
+    ports:
+      - "5000:5000"
 
   frontend:
     build:
-      context: frontend
+      context: frontend-react
       dockerfile: Dockerfile
       args:
-        - VUE_APP_APP_URL=http://localhost:5000
-        - VUE_APP_API_URL=http://localhost:5000/api
-        - VUE_APP_AUTH_URL=http://localhost:5000/oauth/token
+        - REACT_APP_URL=http://localhost:5000
+        - REACT_APP_API_URL=http://localhost:5000
+        - REACT_APP_AUTH_URL=http://localhost:5000
     ports:
-      - "1000:8080"
+      - "1000:80"
     volumes:
       - /app/node_modules
 
