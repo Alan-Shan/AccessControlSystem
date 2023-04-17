@@ -60,10 +60,10 @@ const LoginForm = () => {
                         {error}
                     </div>
                 )}
-                <div className={`form-floating${validationFailed.includes("username") ? " is-invalid" : ""}`}>
+                <div className={`form-floating`}>
                     <input
                         type="text"
-                        className="form-control"
+                        className={`form-control ${validationFailed.includes("username") ? " is-invalid" : ""}`}
                         value={username}
                         id="usernameInput"
                         placeholder="user"
@@ -77,7 +77,7 @@ const LoginForm = () => {
                 <div className={`form-floating${validationFailed.includes("password") ? " is-invalid" : ""}`}>
                     <input
                         type="password"
-                        className="form-control"
+                        className={`form-control ${validationFailed.includes("password") ? " is-invalid" : ""}`}
                         value={password}
                         id="passwordInput"
                         placeholder="****"

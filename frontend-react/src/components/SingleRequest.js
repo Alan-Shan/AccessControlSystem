@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {apiService} from "../services/api";
 import {useParams} from "react-router-dom";
+import {faSave} from "@fortawesome/free-solid-svg-icons";
 
 const SingleRequest = () => {
     const props = useParams();
@@ -72,7 +73,7 @@ const SingleRequest = () => {
         }
     };
 
-    return (<div className="container mt-4">
+    return (<div className="container mt-4 mb-4">
             <div className="row">
                 <div className="col">
                     <h1 className="text-center">Заявка</h1>
@@ -236,7 +237,7 @@ const SingleRequest = () => {
                                         className="btn btn-primary"
                                         onClick={saveRequest}
                                     >
-                                        <FontAwesomeIcon icon={['fas', 'save']} />
+                                        <FontAwesomeIcon icon={faSave} className="me-1"/>
                                         Сохранить
                                     </button>
                                 </div>

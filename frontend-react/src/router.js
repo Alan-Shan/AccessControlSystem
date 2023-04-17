@@ -14,8 +14,6 @@ import NavigationBar from "./components/NavigationBar";
 function RouterView() {
     const PrivateRoute = ({children}) => {
         const hasPrivilegedAccess = authStore.hasPrivilegedAccess
-        console.log(hasPrivilegedAccess);
-        console.log(children);
         return hasPrivilegedAccess ? children : <Navigate to="/login"/>;
     };
 
@@ -59,7 +57,7 @@ function RouterView() {
                     }
                 />
                 <Route
-                    path="/users/:userId"
+                    path="/users/:id"
                     element={
                         <PrivateRoute>
                             <SingleUser/>

@@ -31,6 +31,7 @@ class AuthService {
             if (response && response.data.access_token) {
                 const newUser = {
                     accessToken: response.data.access_token,
+                    refreshToken: response.data.refresh_token,
                     username: jwt_decode(response.data.access_token).sub,
                     role: (await apiService.whoAmI(response.data.access_token)).data.role
                 };

@@ -9,7 +9,7 @@ const instance = axios.create({
 });
 
 instance.interceptors.request.use(function (config) {
-    console.log('locale')
+
     // add token to request header
     const user = JSON.parse(localStorage.getItem('user'));
     if (user && user.accessToken) {

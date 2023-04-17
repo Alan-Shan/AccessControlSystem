@@ -2,10 +2,11 @@ import React, {useState, useEffect} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {apiService} from "../services/api";
 import {useParams} from "react-router-dom";
+import {faSpinner} from "@fortawesome/free-solid-svg-icons";
 
 const SingleUser = () => {
     const props = useParams();
-    const [newUser] = useState(!props.id);
+    const [newUser] = useState(!Number.isInteger(Number(props.id)));
     const [user, setUser] = useState({});
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState({type: "", text: ""});
@@ -52,6 +53,7 @@ const SingleUser = () => {
             try {
                 if (newUser) {
                     setUser((prevUser) => ({...prevUser, admin_type: "admin"}));
+                    setLoading(false);
                     return;
                 }
                 const response = await apiService.getAdmin(props.id);
@@ -68,9 +70,15 @@ const SingleUser = () => {
 
     const alertClass = alertClasses[message.type];
 
-    return (<div className="h-100 d-flex align-items-center justify-content-center">
+    return (<div className="h-100 d-flex align-items-center justify-content-center mt-4">
             <div className="container w-auto">
                 <h1>Пользователь</h1>
+                {loading ? (
+                    <div className="d-flex justify-content-center w-100 mt-5 mb-5">
+                        <div className="spinner-grow" role="status"></div>
+                    </div>
+                ) : (
+                    <div>
                 {message.text && (<div className={`alert ${alertClass}`} role="alert">
                         {message.text}
                     </div>)}
@@ -123,10 +131,11 @@ const SingleUser = () => {
                         </select>
                     </div>
                     <button type="submit" className="btn btn-primary" onClick={sendForm}>
-                        {loading ? (<FontAwesomeIcon icon="spinner"
-                                                     spin/>) : newUser ? ("Добавить") : ("Сохранить")}
+                        {newUser ? ("Добавить") : ("Сохранить")}
                     </button>
                 </form>
+                    </div>
+                )}
             </div>
         </div>);
 };
